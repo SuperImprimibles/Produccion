@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appearance — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="is-view-diseno">
+
+<div class="window">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header" id="sidebar-account-btn">
+      <div class="avatar"></div>
+      <div class="header-bar"></div>
+
+      <div class="account-menu" id="account-menu">
+        <div class="account-menu-top-row">
+          <div class="account-menu-name">Mi cuenta</div>
+
+          <div class="account-menu-utility-row">
+            <span class="switch-wrap">
+              <label class="switch">
+                <input id="darkThemeToggle" type="checkbox" />
+                <div class="slider round">
+                  <div class="sun-moon">
+                    <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="light-ray-1" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="light-ray-2" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="light-ray-3" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-1" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-2" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-3" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-4" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-5" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                    <svg id="cloud-6" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                  </div>
+                  <div class="stars">
+                    <svg id="star-1" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
+                    <svg id="star-2" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
+                    <svg id="star-3" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
+                    <svg id="star-4" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
+                  </div>
+                </div>
+              </label>
+            </span>
+
+            <button type="button" class="account-menu-fullscreen-btn" id="account-menu-fullscreen-btn" aria-label="Pantalla completa" title="Pantalla completa">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+                <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+                <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="account-menu-divider"></div>
+
+        <button type="button" class="account-menu-option account-menu-danger">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div class="nav-item active" data-view="diseno">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      <span class="nav-item-sublabel">Plantilla</span>
+    </div>
+
+    <div class="nav-item" data-view="tematicas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 3a9 9 0 000 18 4.5 4.5 0 000-9 2.5 2.5 0 010-5 6.5 6.5 0 000-4z"/>
+      </svg>
+      <span class="nav-item-sublabel">Temáticas</span>
+    </div>
+
+    <div class="nav-item" data-view="fuentes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7"/>
+        <line x1="9" y1="20" x2="15" y2="20"/>
+        <line x1="12" y1="4" x2="12" y2="20"/>
+      </svg>
+      <span class="nav-item-sublabel">Fuentes</span>
+    </div>
+
+    <div class="nav-item" data-view="texturas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18"/>
+        <path d="M3 15h18"/>
+        <path d="M9 3v18"/>
+        <path d="M15 3v18"/>
+      </svg>
+      <span class="nav-item-sublabel">Texturas</span>
+    </div>
+
+    <div class="nav-item" data-view="elementos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="7" r="3.5"/>
+        <rect x="13" y="3.5" width="7" height="7" rx="1.5"/>
+        <path d="M7 14l4.5 7h-9z"/>
+        <rect x="13" y="13" width="7" height="7" rx="1.5"/>
+      </svg>
+      <span class="nav-item-sublabel">Elementos</span>
+    </div>
+
+    <div class="sidebar-nav-divider"></div>
+
+    <div class="nav-item" data-view="marketing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 11 18-5v12L3 14v-3z"/>
+        <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+      </svg>
+      <span class="nav-item-sublabel">Material</span>
+    </div>
+
+    <div class="nav-item" data-view="gestion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      <span class="nav-item-sublabel">Gestión</span>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Vista 1: Elige tú Diseño -->
+    <section class="view view-active" id="view-diseno">
+      <div id="main">
+        <div id="tabs">
+          <button class="tabBtn active" data-tab="editor">🖼 Segmentación 2D</button>
+          <button class="tabBtn" data-tab="viewer3d">📦 Modelo 3D</button>
+        </div>
+        <div id="panes">
+          <div class="pane active" id="pane-editor">
+            <div id="editorWrap">
+              <canvas id="editorCanvas" width="640" height="480"></canvas>
+              <div id="editorEraserCursor"></div>
+              <div id="dropHint">
+                <div style="font-size:34px;">📐</div>
+                <div class="tematicas-plantillas-text">Plantillas</div>
+              </div>
+              <div id="splitBanner">
+                <span id="splitBannerText">Modo dividir: hacé click en 2 puntos sobre la máscara para trazar el corte.</span>
+                <button class="btn small secondary" id="cancelSplitBtn">Cancelar</button>
+              </div>
+              <div id="dimA4Frame" class="dim-a4-frame">
+                <div class="dim-a4-label" id="dimA4Label">Hoja A4 · 21 × 29.7 cm</div>
+              </div>
+              <div id="dimPageFrame" class="dim-page-frame">
+                <div class="dim-label dim-label-width" id="dimLabelWidth"></div>
+                <div class="dim-label dim-label-height" id="dimLabelHeight"></div>
+                <div class="dim-annotation-info" id="dimAnnotationInfo"></div>
+              </div>
+            </div>
+          </div>
+          <div class="pane" id="pane-viewer3d">
+            <!-- El visor 3D se movió a #side-card (tarjeta flotante); esta pestaña ya no se usa. -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vista: Fuentes -->
+    <section class="view" id="view-fuentes">
+      <div class="fuentes-card-wrap">
+        <aside class="floating-panel-card side-panel-2" id="fuentesCard">
+          <div class="side-panel-2-body" id="fuentesCardBody">
+            <div class="sp2-section">
+              <button type="button" class="vectorize-modal-btn primary" id="fuentesIncorporarBtn"><span>Incorporar</span></button>
+              <span class="vectorize-tool-sep" aria-hidden="true"></span>
+              <span class="vectorize-tool-colorpicker" id="fuentesVectorizeToolColorPicker" title="Color del pincel">
+                <button type="button" class="vectorize-color-eyedropper" id="fuentesVectorizeColorEyedropper" title="Tomar color de la pantalla" aria-label="Tomar color de la pantalla">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m2 22 1-4 9.6-9.6"/>
+                    <path d="m7 17-2-2"/>
+                    <path d="M18.4 3.6a2.1 2.1 0 0 1 3 3L19 9l-3-3Z"/>
+                    <path d="m14.5 6.5 3 3-8.9 8.9-3.8.9.9-3.8Z"/>
+                  </svg>
+                </button>
+                <span class="vcp-wrap">
+                  <button type="button" class="vcp-trigger" id="fuentesVectorizeColorSwatchTrigger" title="Elegir color" aria-haspopup="true" aria-expanded="false">
+                    <span class="vcp-trigger-dot"></span>
+                  </button>
+                  <div class="vcp-palette" id="fuentesVectorizeComicPalette" role="listbox" aria-label="Paleta de colores">
+                    <div class="vcp-panel">
+                      <div class="vcp-items">
+                        <button type="button" class="vcp-item selected" style="--color:#e11d48" data-color="#e11d48" aria-color="#e11d48"></button>
+                        <button type="button" class="vcp-item" style="--color:#f472b6" data-color="#f472b6" aria-color="#f472b6"></button>
+                        <button type="button" class="vcp-item" style="--color:#fb923c" data-color="#fb923c" aria-color="#fb923c"></button>
+                        <button type="button" class="vcp-item" style="--color:#facc15" data-color="#facc15" aria-color="#facc15"></button>
+                        <button type="button" class="vcp-item" style="--color:#84cc16" data-color="#84cc16" aria-color="#84cc16"></button>
+                        <button type="button" class="vcp-item" style="--color:#10b981" data-color="#10b981" aria-color="#10b981"></button>
+                        <button type="button" class="vcp-item" style="--color:#0ea5e9" data-color="#0ea5e9" aria-color="#0ea5e9"></button>
+                        <button type="button" class="vcp-item" style="--color:#3b82f6" data-color="#3b82f6" aria-color="#3b82f6"></button>
+                        <button type="button" class="vcp-item" style="--color:#8b5cf6" data-color="#8b5cf6" aria-color="#8b5cf6"></button>
+                        <button type="button" class="vcp-item" style="--color:#a78bfa" data-color="#a78bfa" aria-color="#a78bfa"></button>
+                      </div>
+                    </div>
+                  </div>
+                </span>
+                <input type="color" class="vectorize-color-native-input" id="fuentesVectorizeToolColor" value="#e11d48" aria-label="Color del pincel">
+              </span>
+              <div id="fuentesNombrePreview"></div>
+            </div>
+
+            <div class="sp2-divider"></div>
+            <div class="sp2-section-title sp2-title-row">Pront
+              <div class="sp2-icon-btn-group">
+                <button type="button" class="btn small icon" id="prontImagenBtn" aria-label="Imagen" title="Imagen">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </button>
+                <button type="button" class="btn small icon" id="prontEditarBtn" aria-label="Editar" title="Editar">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </button>
+                <button type="button" class="btn small icon" id="prontCopiarBtn" aria-label="Copiar" title="Copiar">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                </button>
+                <button type="button" class="btn small icon" id="prontInternetBtn" aria-label="Internet" title="Internet">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div id="fuentesGridWrap">
+        <div id="fuentesGrid"></div>
+        <div id="fuentesDropHint">
+          <div class="fuentes-drophint-text">Fuentes</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vista: Marketing -->
+    <section class="view" id="view-marketing">
+      <div class="category-toolbar">
+              <button type="button" class="category-btn active">Todos</button>
+              <button type="button" class="category-btn">Diseños</button>
+              <div class="category-with-sub" id="plantillasCategoryWrap">
+                <button type="button" class="category-btn">Plantillas</button>
+                <div class="subcategory-menu">
+                  <button type="button" class="subcategory-btn active" data-subcategory="">Todas</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Invitaciones">Invitaciones</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Deco">Deco</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Multiusos">Multiusos</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Plegables">Plegables</button>
+                </div>
+              </div>
+              <button type="button" class="category-btn">Fuentes</button>
+              <div class="category-with-sub" id="texturasCategoryWrap">
+                <button type="button" class="category-btn">Texturas</button>
+                <div class="subcategory-menu">
+                  <button type="button" class="subcategory-btn active" data-subcategory="">Todas</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Acuarelas">Acuarelas</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Geométricas y Minimalistas">Geométricas y Minimalistas</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Orgánicas y Botánicas">Orgánicas y Botánicas</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Texturas de Materiales Naturales">Texturas de Materiales Naturales</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Efectos Metálicos y Foil">Efectos Metálicos y Foil</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Glitter y Brillos">Glitter y Brillos</button>
+                  <button type="button" class="subcategory-btn" data-subcategory="Efecto Pizarra y Tiza">Efecto Pizarra y Tiza</button>
+                </div>
+              </div>
+              <button type="button" class="category-btn">Elementos</button>
+              <div class="category-toolbar-sep" aria-hidden="true"></div>
+              <div class="filter-dropdown">
+                <button type="button" class="filter-btn" aria-label="Filtrar" onclick="this.closest('.filter-dropdown').classList.toggle('open')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 4 20 4 14 12.5 14 19 10 21 10 12.5 4 4"></polygon></svg>
+                </button>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">Filtrar por</div>
+                  <label class="filter-option"><input type="radio" name="filter-estado" checked=""><span class="filter-option-box"></span>Activos (<span id="filter-count-activos">0</span>)</label>
+                  <label class="filter-option"><input type="radio" name="filter-estado"><span class="filter-option-box"></span>Inactivos (<span id="filter-count-inactivos">0</span>)</label>
+                  <label class="filter-option"><input type="radio" name="filter-estado"><span class="filter-option-box"></span>Ambos (<span id="filter-count-ambos">0</span>)</label>
+                  <div class="filter-menu-divider"></div>
+                  <label class="filter-option"><input type="checkbox"><span class="filter-option-box"></span>Incompletos (<span id="filter-count-incompletos">0</span>)</label>
+                  <label class="filter-option"><input type="checkbox"><span class="filter-option-box"></span>Completos (<span id="filter-count-completos">0</span>)</label>
+                  <div class="filter-menu-divider"></div>
+                  <label class="filter-option"><input type="radio" name="filter-orden"><span class="filter-option-box"></span>Más Recientes</label>
+                  <label class="filter-option"><input type="radio" name="filter-orden"><span class="filter-option-box"></span>Más antiguos</label>
+                  <div class="filter-menu-divider"></div>
+                  <label class="filter-option"><input type="checkbox"><span class="filter-option-box"></span>Plegables (<span id="filter-count-plegables">0</span>)</label>
+                </div>
+              </div>
+              <div class="marketing-search-wrap">
+                <svg class="marketing-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input type="search" class="marketing-search-input" id="marketingSearchInput" placeholder="Buscar..." autocomplete="off">
+              </div>
+            </div>
+      <div class="elements-grid" id="elements-grid">
+        <div class="elements-grid-empty" id="elements-grid-empty">Aquí aparecerán los elementos que elijas.</div>
+      </div>
+    </section>
+
+    <!-- Vista: Que Elementos Usaras -->
+    <section class="view" id="view-elementos">
+      <div id="elementosCanvasWrap">
+      <div id="elementosGrid"></div>
+      <div id="elementosDropHint">
+        <div style="font-size:34px;">🧩</div>
+        <div class="elementos-drophint-text">Elementos</div>
+      </div>
+      <input type="file" id="elementosFileInput" accept="image/*" multiple style="display:none">
+      </div>
+
+      <!-- ---------- Modal de ajuste manual de recorte de fondo ---------- -->
+    </section>
+
+  <div class="vectorize-modal-overlay" id="vectorizeModalOverlay">
+    <div class="vectorize-modal">
+      <button type="button" class="vectorize-modal-close" id="vectorizeModalClose" aria-label="Cerrar">×</button>
+      <div class="vectorize-modal-title">
+        <span class="vectorize-modal-title-text">Elemento</span>
+        <div class="vectorize-modal-toolbar" id="vectorizeModalToolbar" role="toolbar" aria-label="Herramientas de edición">
+          <button type="button" class="vectorize-tool-btn" id="vectorizeToolEraser" data-tool="eraser" title="Borrador" aria-label="Borrador" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18.5 13.2 10.8 20.9H6.4l-3.2-3.2c-.6-.6-.6-1.5 0-2.1L13.4 5.4c.6-.6 1.5-.6 2.1 0l3.9 3.9c.6.6.6 1.5 0 2.1l-.9.9Z"/>
+              <path d="M9 21h11.5"/>
+            </svg>
+          </button>
+          <button type="button" class="vectorize-tool-btn" id="vectorizeToolCorrector" data-tool="corrector" title="Corrector" aria-label="Corrector" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 12 2 2 4-4"/>
+              <circle cx="12" cy="12" r="9"/>
+            </svg>
+          </button>
+          <button type="button" class="vectorize-tool-btn" id="vectorizeToolUndo" data-tool="undo" title="Deshacer" aria-label="Deshacer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.5 8H16a5 5 0 0 1 0 10h-3.5"/>
+              <path d="M7.5 8 11 4.7"/>
+              <path d="M7.5 8 11 11.3"/>
+            </svg>
+          </button>
+          <button type="button" class="vectorize-tool-btn" id="vectorizeToolRedo" data-tool="redo" title="Rehacer" aria-label="Rehacer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16.5 8H8a5 5 0 0 0 0 10h3.5"/>
+              <path d="M16.5 8 13 4.7"/>
+              <path d="M16.5 8 13 11.3"/>
+            </svg>
+          </button>
+          <span class="vectorize-tool-sep" aria-hidden="true"></span>
+          <div class="vectorize-tool-tolerance" title="Tolerancia de color: arrastrá el número para ajustar">
+            <span class="vectorize-tool-tolerance-label">Tol.</span>
+            <span class="vectorize-tool-tolerance-scrub" id="vectorizeToleranceVal" data-min="2" data-max="120" data-value="32" tabindex="0" role="slider" aria-valuemin="2" aria-valuemax="120" aria-valuenow="32" aria-label="Tolerancia de color, arrastrar para ajustar">32</span>
+          </div>
+        </div>
+        <button type="button" id="vectorizeModalApply"><span>Incorporar</span></button>
+      </div>
+      <div class="vectorize-modal-body">
+        <div class="vectorize-modal-main">
+          <div class="vectorize-modal-canvaswrap">
+            <div class="vectorize-modal-canvas-zoom" id="vectorizeCanvasZoom">
+              <canvas id="vectorizeModalCanvas"></canvas>
+              <canvas id="vectorizeBrushOverlay"></canvas>
+            </div>
+            <div class="vectorize-brush-cursor" id="vectorizeBrushCursor"></div>
+          </div>
+        </div>
+        <aside class="vectorize-modal-side" id="vectorizeModalSide">
+          <label class="vectorize-modal-check" style="display:none;">
+            <input type="checkbox" id="vectorizeSmoothCheck" checked>
+            Suavizar bordes al vectorizar
+          </label>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+    <!-- Vista: Temáticas -->
+    <section class="view" id="view-tematicas">
+      <div class="tematicas-card-wrap">
+        <aside class="floating-panel-card side-panel-2" id="tematicasCard">
+          <div class="side-panel-2-body" id="tematicasCardBody">
+            <div class="sp2-section">
+              <div class="sp2-section-title sp2-title-row">
+                <div class="tematicas-inputGroup" style="flex:1;">
+                  <input type="text" id="tematicasNombreInput" required autocomplete="off">
+                  <label for="tematicasNombreInput">Nombre de la Temática</label>
+                </div>
+                <button type="button" class="vectorize-modal-btn primary" id="tematicasIncorporarBtn"><span>Incorporar</span></button>
+              </div>
+              <div class="sp2-divider"></div>
+            </div>
+
+            <div class="sp2-row">
+              <div class="sp2-section">
+                <div class="sp2-section-title sp2-title-row">FUENTE
+                  <button type="button" class="btn small btn-elegir" id="tematicasFontChooseBtn" title="Elegir fuente" aria-label="Elegir fuente">Aa</button>
+                </div>
+                <div class="sp2-divider"></div>
+              </div>
+
+              <div class="sp2-section">
+                <div class="sp2-section-title sp2-title-row">TEXTURA
+                  <div class="sp2-color-row">
+                    <input type="color" id="tematicasColorPickerInput" class="color-picker-input" value="#5b9dff">
+                    <div class="sp2-texture-circle" id="tematicasTextureCircle" title="Texturas"></div>
+                    <span class="vcp-wrap">
+                      <button type="button" class="vcp-trigger" id="tematicasColorSwatchTrigger" title="Elegir color" aria-haspopup="true" aria-expanded="false">
+                        <span class="vcp-trigger-dot"></span>
+                      </button>
+                      <div class="vcp-palette" id="tematicasComicPalette" role="listbox" aria-label="Paleta de colores">
+                        <div class="vcp-panel">
+                          <div class="vcp-items">
+                            <button type="button" class="vcp-item selected" style="--color:#e11d48" data-color="#e11d48" aria-color="#e11d48"></button>
+                            <button type="button" class="vcp-item" style="--color:#f472b6" data-color="#f472b6" aria-color="#f472b6"></button>
+                            <button type="button" class="vcp-item" style="--color:#fb923c" data-color="#fb923c" aria-color="#fb923c"></button>
+                            <button type="button" class="vcp-item" style="--color:#facc15" data-color="#facc15" aria-color="#facc15"></button>
+                            <button type="button" class="vcp-item" style="--color:#84cc16" data-color="#84cc16" aria-color="#84cc16"></button>
+                            <button type="button" class="vcp-item" style="--color:#10b981" data-color="#10b981" aria-color="#10b981"></button>
+                            <button type="button" class="vcp-item" style="--color:#0ea5e9" data-color="#0ea5e9" aria-color="#0ea5e9"></button>
+                            <button type="button" class="vcp-item" style="--color:#3b82f6" data-color="#3b82f6" aria-color="#3b82f6"></button>
+                            <button type="button" class="vcp-item" style="--color:#8b5cf6" data-color="#8b5cf6" aria-color="#8b5cf6"></button>
+                            <button type="button" class="vcp-item" style="--color:#a78bfa" data-color="#a78bfa" aria-color="#a78bfa"></button>
+                          </div>
+                        </div>
+                      </div>
+                    </span>
+                  </div>
+                </div>
+                <div class="sp2-divider"></div>
+              </div>
+            </div>
+
+            <div class="sp2-section">
+              <div class="sp2-section-title">Personajes</div>
+              <div class="sp2-personajes-container" id="tematicasPersonajesGrid">
+                <div class="sp2-personajes-cards" id="tematicasPersonajesCards"></div>
+                <div class="sp2-personajes-hint" id="tematicasPersonajesHint">
+                  <div>Click o arrastrá una o varias imágenes</div>
+                </div>
+                <input type="file" id="tematicasPersonajesFileInput" accept="image/*" multiple style="display:none">
+              </div>
+              <div class="sp2-divider"></div>
+            </div>
+
+            <div class="sp2-section">
+              <div class="sp2-section-title">Fondos</div>
+              <div class="sp2-personajes-container" id="tematicasFondosGrid">
+                <div class="sp2-personajes-cards" id="tematicasFondosCards"></div>
+                <div class="sp2-personajes-hint" id="tematicasFondosHint">
+                  <div>Click o arrastrá una o varias imágenes</div>
+                </div>
+                <input type="file" id="tematicasFondosFileInput" accept="image/*" multiple style="display:none">
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Área que ocupa el espacio disponible restante, al lado de la tarjeta -->
+      <div id="tematicasCanvasWrap">
+        <div class="tematicas-canvas-placeholder">Temáticas</div>
+      </div>
+    </section>
+
+    <!-- Vista: Texturas -->
+    <section class="view" id="view-texturas">
+      <div id="texturasCanvasWrap">
+      <div id="texturasGrid"></div>
+      <div id="texturasDropHint">
+        <div style="font-size:34px;">🧩</div>
+        <div class="texturas-drophint-text">Texturas</div>
+      </div>
+      <input type="file" id="texturasFileInput" accept="image/*" multiple style="display:none">
+      </div>
+
+    </section>
+
+    <!-- ---------- Modal de ajuste manual de recorte de fondo (Vista Texturas) ---------- -->
+  <div class="vectorize-modal-overlay" id="texturasVectorizeModalOverlay">
+    <div class="vectorize-modal">
+      <button type="button" class="vectorize-modal-close" id="texturasVectorizeModalClose" aria-label="Cerrar">×</button>
+      <div class="vectorize-modal-body">
+        <div class="vectorize-modal-main">
+          <div class="vectorize-modal-canvaswrap texturas-modal-canvaswrap">
+            <div class="vectorize-modal-canvas-zoom" id="texturasVectorizeCanvasZoom">
+              <canvas id="texturasVectorizeModalCanvas"></canvas>
+              <canvas id="texturasVectorizeBrushOverlay"></canvas>
+            </div>
+            <div class="vectorize-brush-cursor" id="texturasVectorizeBrushCursor"></div>
+          </div>
+        </div>
+        <aside class="vectorize-modal-side" id="texturasVectorizeModalSide">
+          <label class="vectorize-modal-check" style="display:none;">
+            <input type="checkbox" id="texturasVectorizeSmoothCheck" checked>
+            Suavizar bordes al vectorizar
+          </label>
+          <div class="vectorize-side-textboxes-title">
+            <span class="vectorize-modal-title-text">Ajustar Textura</span>
+            <div class="vectorize-modal-toolbar" id="texturasVectorizeModalToolbar" role="toolbar" aria-label="Herramientas de edición">
+              <button type="button" class="vectorize-tool-btn" id="texturasVectorizeToolEraser" data-tool="eraser" title="Corrector" aria-label="Corrector" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18.5 13.2 10.8 20.9H6.4l-3.2-3.2c-.6-.6-.6-1.5 0-2.1L13.4 5.4c.6-.6 1.5-.6 2.1 0l3.9 3.9c.6.6.6 1.5 0 2.1l-.9.9Z"/>
+                  <path d="M9 21h11.5"/>
+                </svg>
+              </button>
+              <button type="button" class="vectorize-tool-btn" id="texturasVectorizeToolUndo" data-tool="undo" title="Deshacer" aria-label="Deshacer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7.5 8H16a5 5 0 0 1 0 10h-3.5"/>
+                  <path d="M7.5 8 11 4.7"/>
+                  <path d="M7.5 8 11 11.3"/>
+                </svg>
+              </button>
+              <button type="button" class="vectorize-tool-btn" id="texturasVectorizeToolRedo" data-tool="redo" title="Rehacer" aria-label="Rehacer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16.5 8H8a5 5 0 0 0 0 10h3.5"/>
+                  <path d="M16.5 8 13 4.7"/>
+                  <path d="M16.5 8 13 11.3"/>
+                </svg>
+              </button>
+              <span class="vectorize-tool-sep" aria-hidden="true"></span>
+              <span class="vectorize-tool-colorpicker" id="texturasVectorizeToolColorPicker" title="Color del pincel">
+                <button type="button" class="vectorize-color-eyedropper" id="texturasVectorizeColorEyedropper" title="Tomar color de la pantalla" aria-label="Tomar color de la pantalla">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m2 22 1-4 9.6-9.6"/>
+                    <path d="m7 17-2-2"/>
+                    <path d="M18.4 3.6a2.1 2.1 0 0 1 3 3L19 9l-3-3Z"/>
+                    <path d="m14.5 6.5 3 3-8.9 8.9-3.8.9.9-3.8Z"/>
+                  </svg>
+                </button>
+                <span class="vcp-wrap">
+                  <button type="button" class="vcp-trigger" id="texturasVectorizeColorSwatchTrigger" title="Elegir color" aria-haspopup="true" aria-expanded="false">
+                    <span class="vcp-trigger-dot"></span>
+                  </button>
+                  <div class="vcp-palette" id="texturasVectorizeComicPalette" role="listbox" aria-label="Paleta de colores">
+                    <div class="vcp-panel">
+                      <div class="vcp-items">
+                        <button type="button" class="vcp-item selected" style="--color:#e11d48" data-color="#e11d48" aria-color="#e11d48"></button>
+                        <button type="button" class="vcp-item" style="--color:#f472b6" data-color="#f472b6" aria-color="#f472b6"></button>
+                        <button type="button" class="vcp-item" style="--color:#fb923c" data-color="#fb923c" aria-color="#fb923c"></button>
+                        <button type="button" class="vcp-item" style="--color:#facc15" data-color="#facc15" aria-color="#facc15"></button>
+                        <button type="button" class="vcp-item" style="--color:#84cc16" data-color="#84cc16" aria-color="#84cc16"></button>
+                        <button type="button" class="vcp-item" style="--color:#10b981" data-color="#10b981" aria-color="#10b981"></button>
+                        <button type="button" class="vcp-item" style="--color:#0ea5e9" data-color="#0ea5e9" aria-color="#0ea5e9"></button>
+                        <button type="button" class="vcp-item" style="--color:#3b82f6" data-color="#3b82f6" aria-color="#3b82f6"></button>
+                        <button type="button" class="vcp-item" style="--color:#8b5cf6" data-color="#8b5cf6" aria-color="#8b5cf6"></button>
+                        <button type="button" class="vcp-item" style="--color:#a78bfa" data-color="#a78bfa" aria-color="#a78bfa"></button>
+                      </div>
+                    </div>
+                  </div>
+                </span>
+                <input type="color" class="vectorize-color-native-input" id="texturasVectorizeToolColor" value="#e11d48" aria-label="Color del pincel">
+              </span>
+              <span class="vectorize-tool-sep" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="vectorize-side-divider"></div>
+          <div class="vectorize-side-colors-title">
+            <span>Colores Detectados</span>
+            <button type="button" class="vectorize-colors-reset" id="texturasVectorizeColorsReset" title="Restablecer colores originales" aria-label="Restablecer colores originales">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/>
+                <path d="M3.5 4.5v4.4h4.4"/>
+              </svg>
+            </button>
+          </div>
+          <div class="vectorize-side-colors-grid" id="texturasVectorizeColorsGrid"></div>
+          <div class="vectorize-side-divider"></div>
+          <div class="vectorize-side-colors-title">
+            <span>Vista</span>
+          </div>
+          <div class="vectorize-side-view-grid" id="texturasVectorizeViewGrid">
+            <button type="button" class="vectorize-view-item" data-view="textura" title="Textura" aria-label="Textura">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 15 15 3"/>
+                <path d="M3 21 21 3"/>
+                <path d="M9 21 21 9"/>
+              </svg>
+            </button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+            <button type="button" class="vectorize-view-item" aria-label="Vacío"></button>
+          </div>
+          <div class="vectorize-side-divider"></div>
+          <div class="vectorize-modal-actions">
+            <div class="vectorize-category-select-wrap">
+              <select class="vectorize-category-select" id="texturasVectorizeCategorySelect">
+                <option value="" disabled selected>Sin categoría</option>
+                <option value="__new__">+ Crear nueva categoría</option>
+              </select>
+            </div>
+            <button type="button" class="vectorize-modal-btn primary" id="texturasVectorizeModalApply"><span>Incorporar</span></button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+    <!-- Vista: Gestión -->
+    <section class="view" id="view-gestion">
+      <div class="category-toolbar" id="gestionCategoryToolbar">
+        <button type="button" class="category-btn active" data-gestion-view="analisis">Análisis</button>
+        <button type="button" class="category-btn" data-gestion-view="operaciones">Operaciones</button>
+        <button type="button" class="category-btn" data-gestion-view="publicaciones">Publicaciones</button>
+        <button type="button" class="category-btn" data-gestion-view="marketing">Marketing</button>
+        <div class="category-toolbar-sep" aria-hidden="true"></div>
+        <button type="button" class="gestion-icon-btn" id="gestionNotaBtn" aria-label="Nota adhesiva" title="Nota adhesiva">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11l6-6V5a2 2 0 0 0-2-2Z"/>
+            <path d="M15 3v6h6"/>
+          </svg>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown">
+          <button type="button" class="gestion-icon-btn" id="gestionNotificacionBtn" aria-label="Notificaciones" title="Notificaciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            <span class="notif-dropdown-badge hide" id="notifDropdownBadge"></span>
+          </button>
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-panel-title">
+              <span>Notificaciones</span>
+              <button type="button" class="notif-panel-clear" id="notifPanelClear">Marcar todo leído</button>
+            </div>
+            <div class="notif-panel-list" id="notifPanelList">
+              <div class="notif-panel-empty">No tenés notificaciones por ahora.</div>
+            </div>
+          </div>
+        </div>
+        <div class="category-toolbar-sep" aria-hidden="true"></div>
+        <button type="button" class="gestion-text-btn gestion-analisis-only" id="gestionConexionesBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 17H7A5 5 0 017 7h2"/>
+            <path d="M15 7h2a5 5 0 010 10h-2"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          <span>Conexiones</span>
+        </button>
+        <button type="button" class="gestion-text-btn gestion-marketing-only" id="gestionCrearMaquetaBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>Crear Maqueta</span>
+        </button>
+        <div class="operaciones-header gestion-operaciones-only" id="gestionOperacionesHeader">
+          <div class="operaciones-filters">
+            <div class="operaciones-filter-field">
+              <label class="operaciones-filter-label" for="operacionesFiltroDesde">Desde</label>
+              <input type="date" class="operaciones-filter-input" id="operacionesFiltroDesde">
+            </div>
+            <div class="operaciones-filter-field">
+              <label class="operaciones-filter-label" for="operacionesFiltroHasta">Hasta</label>
+              <input type="date" class="operaciones-filter-input" id="operacionesFiltroHasta">
+            </div>
+            <div class="operaciones-filter-field">
+              <label class="operaciones-filter-label" for="operacionesFiltroEstado">Estado</label>
+              <select class="operaciones-filter-select" id="operacionesFiltroEstado">
+                <option value="">Todos</option>
+                <option value="processing">Procesando</option>
+                <option value="completed">Completado</option>
+                <option value="pending">Pendiente</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+            <button type="button" class="operaciones-filter-btn" id="operacionesAplicarFiltros">Aplicar Filtros</button>
+          </div>
+        </div>
+        <div class="gestion-sync-group" id="gestionSyncGroup">
+          <button type="button" class="gestion-sync-btn" id="gestionSyncBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+            <span>Sincronizar</span>
+          </button>
+          <span class="gestion-sync-last" id="gestionSyncLast">Última sincronización: —</span>
+          <button type="button" class="gestion-icon-btn" id="gestionPublicacionesMensajeBtn" aria-label="Mensajes" title="Mensajes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <div class="category-toolbar-sep" aria-hidden="true"></div>
+          <div class="marketing-search-wrap">
+            <svg class="marketing-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" class="marketing-search-input" id="gestionPublicacionesSearchInput" placeholder="Buscar..." autocomplete="off">
+          </div>
+        </div>
+        <div class="filter-dropdown gestion-publicaciones-filter" id="gestionPublicacionesFilter">
+          <button type="button" class="filter-btn" aria-label="Filtrar" onclick="this.closest('.filter-dropdown').classList.toggle('open')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 4 20 4 14 12.5 14 19 10 21 10 12.5 4 4"></polygon></svg>
+          </button>
+          <div class="filter-menu">
+            <div class="filter-menu-title">Filtrar por</div>
+            <label class="filter-option"><input type="radio" name="filter-publicaciones-estado" checked=""><span class="filter-option-box"></span>Activos</label>
+            <label class="filter-option"><input type="radio" name="filter-publicaciones-estado"><span class="filter-option-box"></span>Inactivos</label>
+            <label class="filter-option"><input type="radio" name="filter-publicaciones-estado"><span class="filter-option-box"></span>Ambos</label>
+          </div>
+        </div>
+      </div>
+      <div class="gestion-panel-content">
+        <div class="gestion-panel-view" id="gestionPanelPublicaciones">
+          <div class="publicaciones-grid" id="publicacionesGrid">
+            <div class="publicacion-card" data-name="Guirnalda">
+              <div class="publicacion-card-square">
+                <div class="publicacion-card-pills">
+                  <button type="button" class="publicacion-card-pill publicacion-card-pill--active" data-action="herramientas">Activo</button>
+                  <button type="button" class="publicacion-card-pill publicacion-card-pill--tag" data-action="dimension">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Link Fijo
+                  </button>
+                </div>
+              </div>
+              <div class="publicacion-card-footer">
+                <span class="publicacion-card-title">Guirnalda</span>
+              </div>
+              <div class="publicacion-card-meta">
+                <span class="precio">ARS $3.000</span>
+                <span class="stock">Stock: 9989</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gestion-panel-view" id="gestionPanelMarketing"><!-- vacío --></div>
+        <div class="gestion-panel-view" id="gestionPanelOperaciones">
+          <div class="operaciones-panel">
+            <div class="operaciones-table-wrap">
+              <table class="operaciones-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Error</th>
+                    <th class="operaciones-actions-cell">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="operacionesTableBody">
+                  <tr data-estado="processing" data-fecha="2026-07-17T12:52:15">
+                    <td>123456789</td>
+                    <td><span class="operaciones-status-badge" data-status="processing">processing</span></td>
+                    <td>7/17/2026, 12:52:15 PM</td>
+                    <td class="operaciones-error-cell">-</td>
+                    <td class="operaciones-actions-cell"><button type="button" class="operaciones-action-btn">Ver</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="gestion-panel-view active" id="gestionPanelAnalisis">
+          <div class="analisis-stats-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vista 4: Tú Archivo PDF -->
+    <section class="view" id="view-pdf">
+      <!-- vacío -->
+    </section>
+
+  </main>
+
+  <!-- Barra lateral vertical de vistas (antes del panel flotante) -->
+  <nav class="floating-panel-rail" id="floatingPanelRail">
+    <div class="nav-item" data-rail-view="diseno">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 3a9 9 0 000 18 4.5 4.5 0 000-9 2.5 2.5 0 010-5 6.5 6.5 0 000-4z"/>
+      </svg>
+      <span class="nav-item-sublabel">Diseño</span>
+    </div>
+    <div class="nav-item" data-rail-view="medidas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="8" width="18" height="8" rx="1.5"/>
+        <path d="M7 8v3"/>
+        <path d="M11 8v3"/>
+        <path d="M15 8v3"/>
+        <path d="M19 8v3"/>
+      </svg>
+      <span class="nav-item-sublabel">Medidas</span>
+    </div>
+    <div class="nav-item" data-rail-view="jerarquias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="6" r="2.5"/>
+        <circle cx="18" cy="6" r="2.5"/>
+        <circle cx="12" cy="18" r="2.5"/>
+        <path d="M6 8.5V14a2 2 0 002 2h2"/>
+        <path d="M18 8.5V14a2 2 0 01-2 2h-2"/>
+      </svg>
+      <span class="nav-item-sublabel">Jerarquías</span>
+    </div>
+    <div class="nav-item" data-rail-view="configuraciones">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      <span class="nav-item-sublabel">Configuraciones</span>
+    </div>
+
+    <div class="rail-maqueta-toggle-wrap">
+      <span class="rail-maqueta-toggle-label">MAQUETA</span>
+      <!-- From Uiverse.io by njesenberger -->
+      <div class="toggle-container">
+        <input type="checkbox" class="toggle-input" id="railMaquetaToggle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 142" class="toggle">
+          <path d="M71 142C31.7878 142 0 110.212 0 71C0 31.7878 31.7878 0 71 0C110.212 0 119 30 146 30C173 30 182 0 221 0C260 0 292 31.7878 292 71C292 110.212 260.212 142 221 142C181.788 142 173 112 146 112C119 112 110.212 142 71 142Z" class="toggle-background"></path>
+          <rect rx="6" height="64" width="12" y="39" x="64" class="toggle-icon on"></rect>
+          <path d="M221 91C232.046 91 241 82.0457 241 71C241 59.9543 232.046 51 221 51C209.954 51 201 59.9543 201 71C201 82.0457 209.954 91 221 91ZM221 103C238.673 103 253 88.6731 253 71C253 53.3269 238.673 39 221 39C203.327 39 189 53.3269 189 71C189 88.6731 203.327 103 221 103Z" fill-rule="evenodd" class="toggle-icon off"></path>
+          <g filter="url('#goo')">
+            <rect fill="#fff" rx="29" height="58" width="116" y="42" x="13" class="toggle-circle-center"></rect>
+            <rect fill="#fff" rx="58" height="114" width="114" y="14" x="14" class="toggle-circle left"></rect>
+            <rect fill="#fff" rx="58" height="114" width="114" y="14" x="164" class="toggle-circle right"></rect>
+          </g>
+          <filter id="goo">
+            <feGaussianBlur stdDeviation="10" result="blur" in="SourceGraphic"></feGaussianBlur>
+            <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" mode="matrix" in="blur"></feColorMatrix>
+          </filter>
+        </svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Panel lateral flotante (siempre visible) -->
+  <div class="floating-panel" id="floating-panel">
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+
+    <aside class="floating-panel-card side-panel-2" id="side-panel-2">
+      <div class="side-panel-2-body">
+        <div class="sp2-section">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+            <div class="tematicas-inputGroup" style="flex:1 1 auto;">
+              <input type="text" id="sidePanel2NombreInput" required autocomplete="off">
+              <label for="sidePanel2NombreInput">Nombre de la Plantilla</label>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="vectorize-category-select-wrap" style="flex:1 1 auto;">
+              <select class="vectorize-category-select" id="sidePanel2CategorySelect">
+                <option value="" disabled selected>Sin categoría</option>
+                <option value="__new__">+ Crear nueva categoría</option>
+              </select>
+            </div>
+            <button type="button" id="uploadSettingsDoneBtn" class="vectorize-modal-btn primary"><span>Incorporar</span></button>
+          </div>
+          <div class="sp2-divider"></div>
+        </div>
+
+        <div class="sp2-row">
+          <div class="sp2-section">
+            <div class="sp2-section-title sp2-title-row">Temática
+              <button type="button" class="btn small btn-elegir" id="sidePanel2DesignBtn">Elegir</button>
+            </div>
+          </div>
+
+          <div class="sp2-section">
+            <div class="sp2-section-title sp2-title-row">
+              <button type="button" class="btn small btn-elegir" id="sp2FontChooseBtn" title="Elegir fuente" aria-label="Elegir fuente">Aa</button>
+            </div>
+            <div class="sp2-divider"></div>
+          </div>
+
+          <div class="sp2-section">
+            <div class="sp2-section-title sp2-title-row">
+              <div class="sp2-color-row">
+                <input type="color" id="sp2ColorPickerInput" class="color-picker-input" value="#5b9dff">
+                <div class="sp2-texture-circle" id="sp2TextureCircle" title="Texturas"></div>
+                <span class="vcp-wrap">
+                  <button type="button" class="vcp-trigger" id="sp2ColorSwatchTrigger" title="Elegir color" aria-haspopup="true" aria-expanded="false">
+                    <span class="vcp-trigger-dot"></span>
+                  </button>
+                  <div class="vcp-palette" id="sp2ComicPalette" role="listbox" aria-label="Paleta de colores">
+                    <div class="vcp-panel">
+                      <div class="vcp-items">
+                        <button type="button" class="vcp-item selected" style="--color:#e11d48" data-color="#e11d48" aria-color="#e11d48"></button>
+                        <button type="button" class="vcp-item" style="--color:#f472b6" data-color="#f472b6" aria-color="#f472b6"></button>
+                        <button type="button" class="vcp-item" style="--color:#fb923c" data-color="#fb923c" aria-color="#fb923c"></button>
+                        <button type="button" class="vcp-item" style="--color:#facc15" data-color="#facc15" aria-color="#facc15"></button>
+                        <button type="button" class="vcp-item" style="--color:#84cc16" data-color="#84cc16" aria-color="#84cc16"></button>
+                        <button type="button" class="vcp-item" style="--color:#10b981" data-color="#10b981" aria-color="#10b981"></button>
+                        <button type="button" class="vcp-item" style="--color:#0ea5e9" data-color="#0ea5e9" aria-color="#0ea5e9"></button>
+                        <button type="button" class="vcp-item" style="--color:#3b82f6" data-color="#3b82f6" aria-color="#3b82f6"></button>
+                        <button type="button" class="vcp-item" style="--color:#8b5cf6" data-color="#8b5cf6" aria-color="#8b5cf6"></button>
+                        <button type="button" class="vcp-item" style="--color:#a78bfa" data-color="#a78bfa" aria-color="#a78bfa"></button>
+                      </div>
+                    </div>
+                  </div>
+                </span>
+                <button type="button" class="vectorize-tool-btn" id="sp2EraserToolBtn" data-tool="eraser" title="Borrar un elemento de la plantilla" aria-label="Borrar un elemento de la plantilla" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18.5 13.2 10.8 20.9H6.4l-3.2-3.2c-.6-.6-.6-1.5 0-2.1L13.4 5.4c.6-.6 1.5-.6 2.1 0l3.9 3.9c.6.6.6 1.5 0 2.1l-.9.9Z"/>
+                    <path d="M9 21h11.5"/>
+                  </svg>
+                </button>
+                <button type="button" class="vectorize-tool-btn" id="sp2EraserUndoBtn" title="Deshacer último trazo del borrador" aria-label="Deshacer último trazo del borrador" disabled>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 8 3.5 11.5 7 15"/>
+                    <path d="M3.5 11.5H14a6 6 0 1 1 0 12h-1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="sp2-divider"></div>
+          </div>
+        </div>
+
+        <div class="sp2-section">
+          <div class="sp2-section-title">Personajes</div>
+          <div class="sp2-personajes-container" id="sp2PersonajesGrid">
+            <div class="sp2-personajes-cards" id="sp2PersonajesCards"></div>
+            <div class="sp2-personajes-hint" id="sp2PersonajesHint">
+              <div>Click o arrastrá una o varias imágenes</div>
+            </div>
+            <input type="file" id="sp2PersonajesFileInput" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="sp2-divider"></div>
+        </div>
+
+        <div class="sp2-section">
+          <div class="sp2-section-title">Fondos</div>
+          <div class="sp2-personajes-container" id="sp2FondosGrid">
+            <div class="sp2-personajes-cards" id="sp2FondosCards"></div>
+            <div class="sp2-personajes-hint" id="sp2FondosHint">
+              <div>Click o arrastrá una o varias imágenes</div>
+            </div>
+            <input type="file" id="sp2FondosFileInput" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="sp2-divider"></div>
+        </div>
+
+        <div class="sp2-section">
+          <div class="sp2-section-title">Elementos</div>
+          <div class="elements-modal-grid">
+            <div class="elements-square" id="sp2Elemento1"></div>
+            <div class="elements-square" id="sp2Elemento2"></div>
+            <div class="elements-square" id="sp2Elemento3"></div>
+            <div class="elements-square" id="sp2Elemento4"></div>
+            <div class="elements-square" id="sp2Elemento5"></div>
+            <div class="elements-square" id="sp2Elemento6"></div>
+            <div class="elements-square" id="sp2Elemento7"></div>
+            <div class="elements-square" id="sp2Elemento8"></div>
+            <div class="elements-square" id="sp2Elemento9"></div>
+            <div class="elements-square" id="sp2Elemento10"></div>
+            <div class="elements-square" id="sp2Elemento11"></div>
+            <div class="elements-square" id="sp2Elemento12"></div>
+            <div class="elements-square" id="sp2Elemento13"></div>
+            <div class="elements-square" id="sp2Elemento14"></div>
+            <div class="elements-square" id="sp2Elemento15"></div>
+            <div class="elements-square" id="sp2Elemento16"></div>
+            <div class="elements-square" id="sp2Elemento17"></div>
+            <div class="elements-square" id="sp2Elemento18"></div>
+            <div class="elements-square" id="sp2Elemento19"></div>
+            <div class="elements-square" id="sp2Elemento20"></div>
+            <div class="elements-square" id="sp2Elemento21"></div>
+            <div class="elements-square" id="sp2Elemento22"></div>
+            <div class="elements-square" id="sp2Elemento23"></div>
+            <div class="elements-square" id="sp2Elemento24"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="floating-panel-card" id="floatingPanelSettingsSection" style="display:none;">
+      <div class="floating-panel-view active" id="floatingPanelView-settings">
+        <div class="card" id="settingsCard">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="side-panel-2-title">Configuraciones</div>
+          </div>
+          <div class="proper-item">
+            <div class="proper-item-title">Umbral de línea (qué tan oscuro = tinta)</div>
+            <div class="number-input-box">
+              <input type="text" inputmode="decimal" id="threshInput" class="paInput" maxlength="5" value="215" title="Umbral de línea — girá la rueda del mouse sobre el campo para ajustar">
+              <span class="unit">/255</span>
+            </div>
+          </div>
+          <div class="proper-item">
+            <div class="proper-item-title">Tolerancia de adyacencia (grosor de línea aprox.)</div>
+            <div class="number-input-box">
+              <input type="text" inputmode="decimal" id="tolInput" class="paInput" maxlength="5" value="9" title="Tolerancia de adyacencia — girá la rueda del mouse sobre el campo para ajustar">
+              <span class="unit">px</span>
+            </div>
+          </div>
+          <label class="toggle-row" style="margin-top:6px;">
+            <span>Contorno preciso (experimental)</span>
+            <input type="checkbox" id="preciseContour" checked>
+          </label>
+          <div id="segmentStatus" class="sub" style="min-height:14px; margin-top:8px;"></div>
+          <div class="card" id="masksCard" style="margin-top:14px;">
+            <div id="masksConsoleWrap" class="collapsed">
+              <div id="masksConsoleBar">
+                <span id="masksConsoleTitle">Consola de diagnóstico <span id="masksConsoleToggleIcon">▸</span></span>
+                <button type="button" class="btn small" id="copyMasksConsoleBtn">Copiar</button>
+              </div>
+              <pre id="masksConsole">Sin datos todavía.</pre>
+            </div>
+            <div id="fanNotes" style="display:none;"></div>
+            <div id="maskList" style="display:none;"></div>
+            <label class="toggle-row" style="display:none;">
+              <span>Mostrar también regiones excluidas</span>
+              <input type="checkbox" id="showIgnored">
+            </label>
+            <button type="button" id="buildBtn" style="display:none;">🔄 Reconstruir</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="floating-panel-card" id="floatingPanelHierarchySection" style="display:none;">
+      <div class="floating-panel-view active" id="floatingPanelView-hierarchy">
+        <div class="card" id="hierarchyCard">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="side-panel-2-title">Jerarquía</div>
+            <div class="hierarchy-header-actions">
+              <div class="hierarchy-mask-actions" id="hierarchyMaskActions"></div>
+            </div>
+          </div>
+          <div class="hierarchy-selected-info" id="hierarchySelectedInfo">Ninguna máscara seleccionada</div>
+          <div id="hierarchy"></div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="floating-panel-card" id="floatingPanelDimensionsSection" style="display:none;">
+      <div class="floating-panel-view active" id="floatingPanelView-dimensions">
+        <div class="card" id="dimensionsCard">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div class="side-panel-2-title">Dimensiones</div>
+          </div>
+          <label class="toggle-row" id="lockAspectRow" style="margin-bottom:10px;">
+            <span>🔒 Bloqueo de Proporcionalidad</span>
+            <input type="checkbox" id="lockAspectToggle" checked>
+          </label>
+          <div class="proper-content">
+            <div class="proper-item">
+              <div class="proper-item-title">Ancho (cm)</div>
+              <div class="number-input-box">
+                <input type="text" inputmode="decimal" id="dimWidthSlider" class="paInput" maxlength="10" value="21" title="Ancho en cm — girá la rueda del mouse sobre el campo para ajustar">
+                <span class="unit">cm</span>
+              </div>
+            </div>
+            <div class="proper-item">
+              <div class="proper-item-title">Alto (cm)</div>
+              <div class="number-input-box">
+                <input type="text" inputmode="decimal" id="dimHeightSlider" class="paInput" maxlength="10" value="29.7" title="Alto en cm — girá la rueda del mouse sobre el campo para ajustar">
+                <span class="unit">cm</span>
+              </div>
+            </div>
+          </div>
+          <div id="dimsAutoRow" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px;">
+            <span id="dimsAutoStatus" style="font-size:11px; color:var(--ink-faint); line-height:1.3;">Se recalcula automáticamente según las máscaras</span>
+            <button type="button" id="dimsResetAutoBtn" style="display:none; flex:none; font-size:11px; background:none; border:none; color:var(--accent); cursor:pointer; text-decoration:underline; padding:0;">Restaurar Medidas</button>
+          </div>
+          <hr class="divider">
+          <label class="toggle-row" style="margin-top:14px;">
+            <span>Visualizar en Hoja</span>
+            <input type="checkbox" id="showGeneralDimensions">
+          </label>
+          <div class="toggle-row" id="dimsPaperSizeRow">
+            <span>Tamaño de hoja</span>
+            <div class="sheet-size-select-wrap">
+              <select class="sheet-size-select" id="dimsPaperSizeSelect">
+                <option value="A4" data-w="21" data-h="29.7" selected>A4</option>
+                <option value="A3" data-w="29.7" data-h="42">A3</option>
+                <option value="A5" data-w="14.8" data-h="21">A5</option>
+                <option value="Carta" data-w="21.59" data-h="27.94">Carta</option>
+                <option value="Legal" data-w="21.59" data-h="35.56">Legal</option>
+                <option value="Oficio" data-w="21.59" data-h="33.02">Oficio</option>
+              </select>
+            </div>
+            <div class="sheet-size-select-wrap">
+              <select class="sheet-size-select" id="dimsPaperOrientationSelect">
+                <option value="vertical" selected>Vertical</option>
+                <option value="horizontal">Horizontal</option>
+              </select>
+            </div>
+          </div>
+          <hr class="divider">
+          <label class="toggle-row" id="foldableToggleSettingsRow" style="margin-top:14px;">
+            <span>Plegable</span>
+            <input type="checkbox" id="foldableToggleSettings">
+          </label>
+          <label class="toggle-row" id="contourLinesToggleRow" style="margin-top:14px;">
+            <span>Usar lineas de Contorno</span>
+            <input type="checkbox" id="contourLinesToggle">
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <div class="floating-panel-view" id="floatingPanelView-diseno">
+      <div class="design-choice-row">
+        <button type="button" class="design-choice-btn" id="chooseDesignBtn">Elegir Diseño</button>
+      </div>
+      <label class="toggle-row" style="margin-top:14px;">
+        <span>Plantilla Plegable</span>
+        <input type="checkbox" id="foldableTemplateToggle">
+      </label>
+    </div>
+  </div>
+
+  <!-- Modal flotante: Elegir Diseño -->
+  <div class="choose-design-modal-backdrop" id="chooseDesignModalBackdrop">
+    <div class="choose-design-modal">
+      <button type="button" class="choose-design-modal-close" id="chooseDesignModalClose" aria-label="Cerrar">✕</button>
+      <div class="choose-design-modal-body">
+        <div class="elements-modal-grid" id="designPickerGrid">
+          <div class="texture-picker-empty" id="designPickerEmpty">Todavía no agregaste diseños en Marketing. Agregalos desde la categoría correspondiente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal flotante: Texturas -->
+  <div class="choose-design-modal-backdrop" id="textureModalBackdrop">
+    <div class="choose-design-modal">
+      <button type="button" class="choose-design-modal-close" id="textureModalClose" aria-label="Cerrar">✕</button>
+      <div class="choose-design-modal-body">
+        <div class="texture-picker-categories" id="texturePickerCategories">
+          <button type="button" class="subcategory-btn active" data-subcategory="">Todas</button>
+        </div>
+        <div class="elements-modal-grid" id="texturePickerGrid">
+          <div class="texture-picker-empty" id="texturePickerEmpty">Todavía no cargaste texturas. Subilas desde la vista "Texturas".</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal flotante: Fuente -->
+  <div class="choose-design-modal-backdrop" id="fontModalBackdrop">
+    <div class="choose-design-modal">
+      <button type="button" class="choose-design-modal-close" id="fontModalClose" aria-label="Cerrar">✕</button>
+      <div class="choose-design-modal-body">
+        <div class="elements-modal-grid" id="fontPickerGrid">
+          <div class="texture-picker-empty" id="fontPickerEmpty">Todavía no agregaste fuentes en Marketing. Agregalas desde la categoría correspondiente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-card" id="side-card">
+    <div id="empty3d">
+      <div style="font-size:28px;">📦</div>
+    </div>
+    <div id="empty3dResizeHandle" title="Arrastrar para cambiar el tamaño">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 9 L2 14 L7 14"/>
+        <path d="M2 14 L14 2"/>
+      </svg>
+    </div>
+    <div id="canvasHost"></div>
+    <div id="topbar">
+      <div id="badge">t = <b id="tValue">0.00</b></div>
+      <div id="panelInfo">
+        <div class="pname" id="pinfoName">—</div>
+        <div class="pmeta" id="pinfoMeta">—</div>
+      </div>
+    </div>
+
+    <div class="model-collapse viewer-collapse" id="foldCollapseControls" data-feature="VR-004" gtm="ga-click_ai_design_vr_004">
+      <button type="button" class="fold-options-btn" id="foldOptionsBtn" aria-haspopup="true" aria-expanded="false" title="Opciones de plegado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+
+      <button type="button" class="fold-play-btn" id="foldPlayBtn" title="Reproducir">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M7 5.5v13a1 1 0 001.5.87l11-6.5a1 1 0 000-1.74l-11-6.5A1 1 0 007 5.5z"/>
+        </svg>
+      </button>
+
+      <div class="fold-options-popover" id="foldOptionsPopover">
+        <div id="foldOptionsBody">
+          <div class="toggle-row" style="margin-top:10px;">
+            <span>Mostrar líneas de corte / hendido</span>
+            <input type="checkbox" id="toggleLines">
+          </div>
+          <div class="toggle-row">
+            <span>Rotación automática de cámara</span>
+            <input type="checkbox" id="toggleSpin">
+          </div>
+          <div class="toggle-row">
+            <span>Textura de impresión (imagen original)</span>
+            <input type="checkbox" id="toggleTexture">
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-box-outer model-collapse__slider">
+        <div class="slider-box" style="height: 3px; border-radius: 2px;" id="modelCollapseSliderBox">
+          <div class="active" id="modelCollapseActive" style="width: 100%;"></div>
+          <div class="pointer" id="modelCollapsePointer" gtm="ga-ai_design_preview_upload_pitch" style="transform: translate(0px, -4.5px); left: calc(100% - 6px); width: 12px; height: 12px; border-width: 1px;"></div>
+        </div>
+      </div>
+      <span class="model-collapse__percent" id="modelCollapsePercent">100%</span>
+    </div>
+  </div>
+
+  <!-- Modal de descarga -->
+  <div class="download-modal-backdrop" id="download-modal-backdrop">
+    <div class="download-modal">
+      <button class="download-modal-close" type="button" id="download-modal-close" aria-label="Cerrar">✕</button>
+
+      <h2 class="download-modal-title">Vas a descargar estos archivos</h2>
+
+      <!-- Resumen: qué archivos elegís + lista + total, todo junto -->
+      <div class="download-modal-summary">
+        <div class="download-modal-file-list" id="download-modal-file-list"></div>
+
+        <div class="download-modal-total" id="download-modal-total"></div>
+      </div>
+
+      <div class="download-modal-location">
+        <div class="download-modal-location-label">Ubicación de descarga</div>
+        <button type="button" class="download-modal-location-btn" id="download-modal-location-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          <span id="download-modal-location-text">Elegir carpeta de destino</span>
+        </button>
+      </div>
+
+      <button class="download-modal-confirm-btn" type="button" id="download-modal-confirm-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Descargar Archivo/s
+      </button>
+
+      <div class="download-expiry-note">Descargue sus archivos antes de que su compra expire el 00/00/0000.</div>
+    </div>
+  </div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- GestorPlantillas: módulo de persistencia de plantillas en localStorage -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<script src="js/gestor-plantillas.js"></script>
+
+<!-- Controles e interacciones de la UI principal (modales, paneles, vistas) -->
+<script src="js/ui-controles-app.js"></script>
+
+<!-- ── GestorJuntas: módulo de persistencia de juntas en localStorage ── -->
+<script src="js/gestor-juntas.js"></script>
+
+<!-- ── UI del Panel de Juntas y datos del evento ── -->
+<script src="js/panel-evento-juntas.js"></script>
+
+<!-- ============================================================
+     MOTOR FUNCIONAL DEL VISOR 3D (portado de visor-plegado-3d-glass)
+     Detección de dieline, jerarquía de plegado y armado del modelo 3D.
+     Conectado a los controles reales de SuperImprimible 10 (side-card,
+     side-panel-2 y el panel "Plantilla" de floating-panel), sin tocar
+     el diseño existente.
+     ============================================================ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="js/visor-3d.js"></script>
+
+</body>
+</html>
