@@ -1523,37 +1523,31 @@
 
     let activeTriggerEl = null;
 
-    // Las fuentes que se muestran acá son las tarjetas ya cargadas en
-    // #elements-grid (vista Marketing) cuya categoría coincide con la que
-    // esté activa en #view-marketing > .category-toolbar > .category-btn.active
-    // (por ej. "Fuentes"), para que el picker quede siempre sincronizado con
-    // lo que se haya agregado en esa categoría.
-    function getActiveMarketingCategory(){
-      const activeBtn = document.querySelector('#view-marketing > .category-toolbar > .category-btn.active');
-      return activeBtn ? activeBtn.textContent.trim() : '';
-    }
-
-    function getFontCards(){
-      const cat = getActiveMarketingCategory();
-      if (!cat || cat === 'Todos' || cat === 'Elegidos por Tí') return [];
-      return Array.prototype.filter.call(
-        document.querySelectorAll('#elements-grid .element-card'),
-        function(card){ return card.dataset.marketingCategory === cat; }
-      );
-    }
-
-    function applyFont(fontName){
-      if (!activeTriggerEl || !fontName) return;
-      activeTriggerEl.style.fontFamily = "'" + fontName.replace(/'/g, "\\'") + "', inherit";
-      activeTriggerEl.dataset.selectedFont = fontName;
+    function applyFont(fuente){
+      if (!activeTriggerEl || !fuente) return;
+      // Guardar referencia a la fuente seleccionada
+      activeTriggerEl.dataset.selectedFont = fuente.id;
+      activeTriggerEl.dataset.selectedFontName = fuente.nombre;
+      // Aquí se puede agregar lógica adicional para aplicar la fuente al elemento
+      console.log('[Font Picker] Fuente seleccionada:', fuente.nombre);
     }
 
     function renderGrid(){
       if (!gridWrap) return;
       gridWrap.innerHTML = '';
-      const cards = getFontCards();
+      
+      if (typeof GestorFuentes === 'undefined') {
+        console.warn('[Font Picker] GestorFuentes no está disponible');
+        const empty = document.createElement('div');
+        empty.className = 'texture-picker-empty';
+        empty.textContent = 'Error: Sistema de fuentes no disponible.';
+        gridWrap.appendChild(empty);
+        return;
+      }
+      
+      const fuentes = GestorFuentes.listar();
 
-      if (!cards.length){
+      if (!fuentes.length){
         const empty = document.createElement('div');
         empty.className = 'texture-picker-empty';
         empty.id = 'fontPickerEmpty';
@@ -1562,20 +1556,107 @@
         return;
       }
 
-      cards.forEach(function(card){
-        const fontName = card.dataset.name || 'Sin nombre';
+      fuentes.forEach(function(fuente){
         const thumb = document.createElement('div');
         thumb.className = 'texture-picker-thumb font-picker-thumb';
-        thumb.style.fontFamily = "'" + fontName.replace(/'/g, "\\'") + "', inherit";
-        thumb.title = fontName;
-        thumb.textContent = 'Aa';
+        thumb.title = fuente.nombre;
+        thumb.style.backgroundColor = '#fff';
+        
+        // Renderizar el texto "Aa" o "ABC" con la fuente guardada
+        renderizarTextoConFuenteParaModal(fuente, 'ABC').then(function(canvas) {
+          if (canvas) {
+            thumb.style.backgroundImage = 'url("' + canvas.toDataURL('image/png') + '")';
+            thumb.style.backgroundSize = 'contain';
+            thumb.style.backgroundPosition = 'center';
+            thumb.style.backgroundRepeat = 'no-repeat';
+          }
+        }).catch(function(err) {
+          console.error('[Font Picker] Error al renderizar preview:', err);
+          // Fallback: mostrar el nombre
+          thumb.textContent = fuente.nombre.substring(0, 3);
+        });
+        
         thumb.addEventListener('click', function(){
           gridWrap.querySelectorAll('.font-picker-thumb.selected').forEach(function(t){ t.classList.remove('selected'); });
           thumb.classList.add('selected');
-          applyFont(fontName);
+          applyFont(fuente);
           closeModal();
         });
         gridWrap.appendChild(thumb);
+      });
+    }
+
+    // Función auxiliar para renderizar texto pequeño para el modal
+    function renderizarTextoConFuenteParaModal(fuente, texto) {
+      return new Promise(function(resolve, reject) {
+        if (!fuente || !fuente.caracteres || !texto) {
+          reject(new Error('Datos inválidos'));
+          return;
+        }
+        
+        var caracteres = fuente.caracteres;
+        var spacing = 1;
+        var targetHeight = 30; // Más pequeño para el modal
+        
+        var promesas = [];
+        var charMap = {};
+        
+        for (var i = 0; i < texto.length; i++) {
+          var char = texto[i];
+          if (!caracteres[char]) continue;
+          if (charMap[char]) continue;
+          
+          (function(c) {
+            var promise = new Promise(function(res, rej) {
+              var img = new Image();
+              img.onload = function() { res({ char: c, img: img }); };
+              img.onerror = function() { rej(new Error('Error cargando imagen')); };
+              img.src = caracteres[c];
+            });
+            promesas.push(promise);
+          })(char);
+          
+          charMap[char] = true;
+        }
+        
+        Promise.all(promesas).then(function(resultados) {
+          var loadedChars = {};
+          resultados.forEach(function(r) {
+            loadedChars[r.char] = r.img;
+          });
+          
+          var totalWidth = 3;
+          for (var i = 0; i < texto.length; i++) {
+            var char = texto[i];
+            if (!loadedChars[char]) continue;
+            var img = loadedChars[char];
+            var scale = targetHeight / img.height;
+            var charWidth = img.width * scale;
+            totalWidth += charWidth + spacing;
+          }
+          
+          var canvas = document.createElement('canvas');
+          canvas.width = totalWidth + 3;
+          canvas.height = targetHeight + 6;
+          var ctx = canvas.getContext('2d');
+          
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          var x = 3;
+          var y = 3;
+          
+          for (var i = 0; i < texto.length; i++) {
+            var char = texto[i];
+            if (!loadedChars[char]) continue;
+            var img = loadedChars[char];
+            var scale = targetHeight / img.height;
+            var charWidth = img.width * scale;
+            ctx.drawImage(img, x, y, charWidth, targetHeight);
+            x += charWidth + spacing;
+          }
+          
+          resolve(canvas);
+        }).catch(reject);
       });
     }
 
@@ -2449,15 +2530,19 @@
 
     var square = document.createElement('div');
     square.className = 'element-square';
+    square.style.backgroundColor = '#fff'; // Fondo blanco para que se vean las letras
     
-    // Aplicar la imagen guardada (preview del nombre renderizado)
-    if (fuente.preview) {
-      square.style.backgroundImage = 'url("' + fuente.preview + '")';
-      square.style.backgroundSize = 'contain';
-      square.style.backgroundPosition = 'center';
-      square.style.backgroundRepeat = 'no-repeat';
-      square.style.backgroundColor = '#fff'; // Fondo blanco para que se vean las letras
-    }
+    // Generar preview del texto "Super Imprimible" usando la fuente guardada (asíncrono)
+    renderizarTextoConFuenteAsync(fuente, 'Super Imprimible').then(function(previewCanvas) {
+      if (previewCanvas) {
+        square.style.backgroundImage = 'url("' + previewCanvas.toDataURL('image/png') + '")';
+        square.style.backgroundSize = 'contain';
+        square.style.backgroundPosition = 'center';
+        square.style.backgroundRepeat = 'no-repeat';
+      }
+    }).catch(function(err) {
+      console.error('[crearTarjetaFuenteGuardada] Error al renderizar preview:', err);
+    });
 
     var percentBadge = document.createElement('span');
     percentBadge.className = 'element-square-percent';
@@ -2533,6 +2618,114 @@
         console.log('[crearTarjetaFuenteGuardada] No se pudo aplicar filtro todavía (carga inicial):', e.message);
       }
     }
+  }
+
+  // Función auxiliar ASÍNCRONA para renderizar texto usando los caracteres de una fuente
+  function renderizarTextoConFuenteAsync(fuente, texto) {
+    return new Promise(function(resolve, reject) {
+      if (!fuente || !fuente.caracteres || !texto) {
+        return reject(new Error('Datos inválidos'));
+      }
+      
+      texto = texto.toUpperCase(); // Convertir a mayúsculas
+      var caracteres = fuente.caracteres;
+      
+      // Cargar todas las imágenes primero
+      var loadPromises = [];
+      var charImages = {};
+      
+      for (var i = 0; i < texto.length; i++) {
+        var char = texto[i];
+        if (char === ' ') continue;
+        
+        if (!caracteres[char]) {
+          console.warn('[renderizarTextoConFuente] Carácter no disponible:', char);
+          continue;
+        }
+        
+        (function(index, character) {
+          var img = new Image();
+          var promise = new Promise(function(resolveImg) {
+            img.onload = function() {
+              charImages[index] = { img: img, char: character };
+              resolveImg();
+            };
+            img.onerror = function() {
+              console.error('[renderizarTextoConFuente] Error cargando imagen:', character);
+              resolveImg(); // Continuar aunque falle
+            };
+          });
+          img.src = caracteres[character];
+          loadPromises.push(promise);
+        })(i, char);
+      }
+      
+      // Cuando todas las imágenes estén cargadas, renderizar
+      Promise.all(loadPromises).then(function() {
+        try {
+          // Calcular dimensiones
+          var maxHeight = 0;
+          var totalWidth = 0;
+          var spacing = 2;
+          var targetHeight = 40;
+          
+          var charDimensions = [];
+          
+          for (var i = 0; i < texto.length; i++) {
+            var char = texto[i];
+            if (char === ' ') {
+              charDimensions.push({ type: 'space', width: 15 });
+              totalWidth += 15;
+              continue;
+            }
+            
+            if (!charImages[i]) continue;
+            
+            var charImg = charImages[i].img;
+            var scale = targetHeight / (charImg.height || targetHeight);
+            var charWidth = (charImg.width || 20) * scale;
+            
+            charDimensions.push({
+              type: 'char',
+              img: charImg,
+              width: charWidth,
+              height: targetHeight
+            });
+            
+            totalWidth += charWidth + spacing;
+            maxHeight = Math.max(maxHeight, targetHeight);
+          }
+          
+          // Crear canvas con las dimensiones calculadas
+          var canvas = document.createElement('canvas');
+          canvas.width = totalWidth + 10; // padding
+          canvas.height = maxHeight + 10; // padding
+          var ctx = canvas.getContext('2d');
+          
+          // Fondo transparente
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          var x = 5; // padding inicial
+          var y = 5;
+          
+          // Dibujar cada carácter
+          for (var i = 0; i < charDimensions.length; i++) {
+            var dim = charDimensions[i];
+            
+            if (dim.type === 'space') {
+              x += dim.width;
+            } else if (dim.type === 'char') {
+              ctx.drawImage(dim.img, x, y, dim.width, dim.height);
+              x += dim.width + spacing;
+            }
+          }
+          
+          resolve(canvas);
+        } catch (error) {
+          reject(error);
+        }
+      }).catch(reject);
+    });
   }
 
   // Escuchar cambios en el almacenamiento para recargar automáticamente
