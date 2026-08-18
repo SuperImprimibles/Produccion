@@ -4132,6 +4132,39 @@ function prepareCanvasFromImage(img) {
         item.tolerance = getToleranceValue();
         runPipeline(activeModalId);
         renderTextboxesOnCard(activeModalId);
+        
+        // ══════════════════════════════════════════════════════════════════════
+        // GUARDAR ELEMENTO EN LOCALSTORAGE
+        // ══════════════════════════════════════════════════════════════════════
+        try {
+          // Obtener el canvas procesado del elemento
+          var canvas = modalCanvas;
+          if (canvas && canvas.width > 0 && canvas.height > 0) {
+            var preview = canvas.toDataURL('image/png');
+            
+            // Guardar elemento usando GestorElementos
+            var elementoGuardado = GestorElementos.guardar({
+              nombre: activeModalId || 'Elemento sin nombre',
+              preview: preview,
+              categoria: 'Elementos',
+              tolerance: item.tolerance || 32
+            });
+            
+            console.log('[Elemento Incorporado]', elementoGuardado.nombre, 'v' + elementoGuardado.version);
+            
+            // Mostrar notificación breve (opcional)
+            // Puedes agregar una notificación toast aquí si querés
+          }
+        } catch (err) {
+          console.error('[Error al guardar elemento]', err);
+          if (err.message === 'QUOTA_EXCEEDED') {
+            alert('No hay suficiente espacio en el almacenamiento local. Eliminá algunos elementos antiguos.');
+          } else if (err.message === 'STORAGE_DISABLED') {
+            alert('El almacenamiento local está deshabilitado en tu navegador.');
+          }
+        }
+        // ══════════════════════════════════════════════════════════════════════
+        
         closeAdjustModal();
       });
     }

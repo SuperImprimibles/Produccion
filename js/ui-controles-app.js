@@ -2013,6 +2013,131 @@
 
   // ══════════════════════════════════════════════════════════════════════
 
+  // ══════════════════════════════════════════════════════════════════════
+  // CARGAR ELEMENTOS GUARDADOS DESDE LOCALSTORAGE
+  // ══════════════════════════════════════════════════════════════════════
+  function cargarElementosGuardados() {
+    if (typeof GestorElementos === 'undefined') {
+      console.warn('[Marketing] GestorElementos no está disponible');
+      return;
+    }
+    
+    var elementosGuardados = GestorElementos.listar();
+    
+    elementosGuardados.forEach(function(elemento) {
+      // Verificar si ya existe una tarjeta con este nombre
+      var existingCard = document.querySelector('#elements-grid .element-card[data-name="' + elemento.nombre + '"]');
+      if (existingCard) {
+        // Actualizar la tarjeta existente con la imagen guardada
+        var square = existingCard.querySelector('.element-square');
+        if (square && elemento.preview) {
+          square.style.backgroundImage = 'url("' + elemento.preview + '")';
+          square.style.backgroundSize = 'cover';
+          square.style.backgroundPosition = 'center';
+          square.style.backgroundRepeat = 'no-repeat';
+        }
+      } else {
+        // Crear una nueva tarjeta para este elemento
+        crearTarjetaElementoGuardado(elemento);
+      }
+    });
+  }
+
+  function crearTarjetaElementoGuardado(elemento) {
+    var card = document.createElement('div');
+    card.className = 'element-card';
+    card.dataset.name = elemento.nombre;
+    card.dataset.category = elemento.categoria || 'Sin categoría';
+    card.dataset.marketingCategory = 'Elementos';
+
+    var topRow = document.createElement('div');
+    topRow.className = 'element-top-row';
+    topRow.addEventListener('click', function(e) {
+      if (e.target.closest('button, input, label, a')) return;
+      // openElementDetailModal(elemento.nombre); // Descomentar si existe esta función
+    });
+
+    var square = document.createElement('div');
+    square.className = 'element-square';
+    
+    // Aplicar la imagen guardada
+    if (elemento.preview) {
+      square.style.backgroundImage = 'url("' + elemento.preview + '")';
+      square.style.backgroundSize = 'cover';
+      square.style.backgroundPosition = 'center';
+      square.style.backgroundRepeat = 'no-repeat';
+    }
+
+    var percentBadge = document.createElement('span');
+    percentBadge.className = 'element-square-percent';
+    percentBadge.textContent = '100%';
+    square.appendChild(percentBadge);
+
+    var dimensionBadge = document.createElement('button');
+    dimensionBadge.type = 'button';
+    dimensionBadge.className = 'square-dimension-badge';
+    dimensionBadge.textContent = '2D';
+    dimensionBadge.setAttribute('aria-label', 'Cambiar entre 2D y 3D');
+    dimensionBadge.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dimensionBadge.textContent = dimensionBadge.textContent === '2D' ? '3D' : '2D';
+    });
+    square.appendChild(dimensionBadge);
+
+    var editPencilSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+
+    var specs = document.createElement('div');
+    specs.className = 'element-specs';
+    specs.innerHTML =
+      '<div class="spec-row"><span class="spec-label">Medidas</span><span class="spec-value">Auto</span>' +
+        '<button type="button" class="spec-edit-btn" data-action="edit-medidas" aria-label="Editar medidas">' + editPencilSvg + '</button></div>' +
+      '<div class="spec-row"><span class="spec-label">Categoria:</span><span class="spec-value">' + (elemento.categoria || 'Elementos') + '</span>' +
+        '<button type="button" class="spec-edit-btn" data-action="edit-categoria" aria-label="Editar categoria">' + editPencilSvg + '</button></div>';
+
+    topRow.appendChild(square);
+    topRow.appendChild(specs);
+
+    var row = document.createElement('div');
+    row.className = 'quantities-row';
+    row.innerHTML =
+      '<span class="quantities-label">' + elemento.nombre + '</span>' +
+      '<label class="element-lock-toggle">' +
+        '<input type="checkbox" value="">' +
+        '<div class="element-lock-track">' +
+          '<svg class="element-lock-icon open" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>' +
+          '</svg>' +
+          '<svg class="element-lock-icon closed" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+            '<path fill-rule="evenodd" d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z"></path>' +
+          '</svg>' +
+          '<div class="element-lock-thumb"></div>' +
+        '</div>' +
+      '</label>';
+
+    card.appendChild(topRow);
+    card.appendChild(row);
+    elementsGrid.appendChild(card);
+
+    var lockInput = row.querySelector('.element-lock-toggle input');
+    if (lockInput) {
+      lockInput.addEventListener('change', function() {
+        if (typeof applyElementsCategoryFilter === 'function') {
+          applyElementsCategoryFilter();
+        }
+      });
+    }
+  }
+
+  // Cargar elementos guardados al iniciar
+  cargarElementosGuardados();
+
+  // Escuchar cambios en el almacenamiento para recargar automáticamente
+  window.addEventListener('superimprimible:elementos-updated', function() {
+    console.log('[Marketing] Recargando elementos guardados...');
+    cargarElementosGuardados();
+  });
+  // ══════════════════════════════════════════════════════════════════════
+
 
   // ---------- Vista alterna en columna 2 de la tarjeta: Tamaño Plano / Copias ----------
   (function initSpecsAltViews(){
