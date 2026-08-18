@@ -1414,13 +1414,12 @@
     let activeTriggerEl = null;
     let activeSubcategory = '';
 
-    // Las categorías del picker se generan a partir de los mismos botones que
-    // filtran "Texturas" en el toolbar de Marketing (#texturasCategoryWrap > div),
-    // así quedan siempre sincronizadas.
+    // Las categorías del picker se generan a partir de las subcategorías disponibles
+    // en las texturas guardadas
     function populateCategories(){
       if (!categoriesWrap) return;
-      const sourceMenu = document.querySelector('#texturasCategoryWrap > div');
       categoriesWrap.innerHTML = '';
+      
       const todasBtn = document.createElement('button');
       todasBtn.type = 'button';
       todasBtn.className = 'subcategory-btn' + (activeSubcategory === '' ? ' active' : '');
@@ -1428,39 +1427,70 @@
       todasBtn.textContent = 'Todas';
       categoriesWrap.appendChild(todasBtn);
 
-      if (sourceMenu){
-        sourceMenu.querySelectorAll('.subcategory-btn').forEach(function(srcBtn){
-          const nombre = srcBtn.dataset.subcategory;
-          if (!nombre) return; // se salta el "Todas" de origen
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'subcategory-btn' + (activeSubcategory === nombre ? ' active' : '');
-          btn.dataset.subcategory = nombre;
-          btn.textContent = nombre;
-          categoriesWrap.appendChild(btn);
+      // Obtener subcategorías únicas de las texturas guardadas
+      if (typeof GestorTexturas !== 'undefined') {
+        const texturas = GestorTexturas.listar();
+        const subcategorias = new Set();
+        texturas.forEach(function(tex) {
+          if (tex.subcategoria) subcategorias.add(tex.subcategoria);
+        });
+        
+        // Lista de subcategorías en orden
+        const subcategoriasOrdenadas = [
+          'Acuarelas',
+          'Geométricas y Minimalistas',
+          'Orgánicas y Botánicas',
+          'Texturas de Materiales Naturales',
+          'Efectos Metálicos y Foil',
+          'Glitter y Brillos',
+          'Efecto Pizarra y Tiza'
+        ];
+        
+        subcategoriasOrdenadas.forEach(function(nombre) {
+          if (subcategorias.has(nombre)) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'subcategory-btn' + (activeSubcategory === nombre ? ' active' : '');
+            btn.dataset.subcategory = nombre;
+            btn.textContent = nombre;
+            categoriesWrap.appendChild(btn);
+          }
         });
       }
     }
 
-    function applyTexture(item){
-      if (!activeTriggerEl || !item || !item.img) return;
-      activeTriggerEl.style.backgroundImage = 'url(' + item.img.src + ')';
+    function applyTexture(textura){
+      if (!activeTriggerEl || !textura || !textura.preview) return;
+      activeTriggerEl.style.backgroundImage = 'url("' + textura.preview + '")';
       activeTriggerEl.style.backgroundSize = 'cover';
       activeTriggerEl.style.backgroundPosition = 'center';
+      activeTriggerEl.dataset.selectedTexture = textura.id;
+      activeTriggerEl.dataset.selectedTextureName = textura.nombre;
+      console.log('[Texture Picker] Textura seleccionada:', textura.nombre);
     }
 
     function renderGrid(){
       if (!gridWrap) return;
       gridWrap.innerHTML = '';
-      const items = window.__texturasItems || {};
-      const ids = Object.keys(items).filter(function(id){
-        const item = items[id];
-        if (!item || !item.img) return false;
+      
+      if (typeof GestorTexturas === 'undefined') {
+        console.warn('[Texture Picker] GestorTexturas no está disponible');
+        const empty = document.createElement('div');
+        empty.className = 'texture-picker-empty';
+        empty.textContent = 'Error: Sistema de texturas no disponible.';
+        gridWrap.appendChild(empty);
+        return;
+      }
+      
+      const texturas = GestorTexturas.listar();
+      
+      // Filtrar por subcategoría activa
+      const texturasFiltradasFiltered = texturas.filter(function(tex) {
         if (!activeSubcategory) return true;
-        return item.category === activeSubcategory;
+        return tex.subcategoria === activeSubcategory;
       });
 
-      if (!ids.length){
+      if (!texturasFiltradasFiltered.length){
         const empty = document.createElement('div');
         empty.className = 'texture-picker-empty';
         empty.textContent = 'Todavía no cargaste texturas en esa categoría. Subilas desde la vista "Texturas".';
@@ -1468,16 +1498,17 @@
         return;
       }
 
-      ids.forEach(function(id){
-        const item = items[id];
+      texturasFiltradasFiltered.forEach(function(textura){
         const thumb = document.createElement('div');
         thumb.className = 'texture-picker-thumb';
-        thumb.style.backgroundImage = 'url(' + item.img.src + ')';
-        thumb.title = item.category || 'Sin categoría';
+        thumb.style.backgroundImage = 'url("' + textura.preview + '")';
+        thumb.style.backgroundSize = 'cover';
+        thumb.style.backgroundPosition = 'center';
+        thumb.title = textura.nombre + (textura.subcategoria ? ' (' + textura.subcategoria + ')' : '');
         thumb.addEventListener('click', function(){
           gridWrap.querySelectorAll('.texture-picker-thumb.selected').forEach(function(t){ t.classList.remove('selected'); });
           thumb.classList.add('selected');
-          applyTexture(item);
+          applyTexture(textura);
           closeModal();
         });
         gridWrap.appendChild(thumb);
