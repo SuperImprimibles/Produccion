@@ -2176,7 +2176,56 @@
   window.addEventListener('superimprimible:elementos-updated', function() {
     console.log('[Marketing] Recargando elementos guardados...');
     cargarElementosGuardados();
+    cargarElementosEnSidePanel(); // También actualizar el side-panel-2
   });
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ══════════════════════════════════════════════════════════════════════
+  // CARGAR ELEMENTOS EN EL SIDE-PANEL-2 (Vista Diseño)
+  // ══════════════════════════════════════════════════════════════════════
+  function cargarElementosEnSidePanel() {
+    console.log('[cargarElementosEnSidePanel] Iniciando carga en side-panel-2...');
+    if (typeof GestorElementos === 'undefined') {
+      console.warn('[SidePanel2] GestorElementos no está disponible');
+      return;
+    }
+    
+    var elementosGuardados = GestorElementos.listar();
+    console.log('[cargarElementosEnSidePanel] Elementos disponibles:', elementosGuardados);
+    
+    // Llenar los cuadrados del side-panel-2 (máximo 24)
+    for (var i = 1; i <= 24; i++) {
+      var square = document.getElementById('sp2Elemento' + i);
+      if (!square) continue;
+      
+      var elemento = elementosGuardados[i - 1]; // 0-indexed
+      
+      if (elemento && elemento.preview) {
+        // Aplicar la imagen del elemento
+        square.style.backgroundImage = 'url("' + elemento.preview + '")';
+        square.style.backgroundSize = 'contain';
+        square.style.backgroundPosition = 'center';
+        square.style.backgroundRepeat = 'no-repeat';
+        square.setAttribute('data-elemento-id', elemento.id);
+        square.setAttribute('data-elemento-nombre', elemento.nombre);
+        square.classList.add('has-element');
+        
+        // Hacer clickeable para aplicarlo sobre el canvas
+        square.style.cursor = 'pointer';
+        square.title = elemento.nombre;
+      } else {
+        // Limpiar cuadrado vacío
+        square.style.backgroundImage = 'none';
+        square.removeAttribute('data-elemento-id');
+        square.removeAttribute('data-elemento-nombre');
+        square.classList.remove('has-element');
+        square.style.cursor = '';
+        square.title = '';
+      }
+    }
+    
+    console.log('[cargarElementosEnSidePanel] Cargados', Math.min(elementosGuardados.length, 24), 'elementos en side-panel-2');
+  }
   // ══════════════════════════════════════════════════════════════════════
 
   // ══════════════════════════════════════════════════════════════════════
@@ -2974,6 +3023,8 @@
   // Cargar elementos, texturas y fuentes guardados DESPUÉS de que elementsToolbar esté definido
   console.log('[Init] Llamando a cargarElementosGuardados después de inicializar filtros...');
   cargarElementosGuardados();
+  console.log('[Init] Llamando a cargarElementosEnSidePanel para side-panel-2...');
+  cargarElementosEnSidePanel();
   console.log('[Init] Llamando a cargarTexturasGuardadas después de inicializar filtros...');
   cargarTexturasGuardadas();
   console.log('[Init] Llamando a cargarFuentesGuardadas después de inicializar filtros...');
