@@ -2528,6 +2528,43 @@ function prepareCanvasFromImage(img) {
       item.category = (categorySelect && categorySelect.value !== '__new__') ? categorySelect.value : (item.category || '');
       runPipeline(activeModalId);
       renderTextboxesOnCard(activeModalId);
+      
+      // ══════════════════════════════════════════════════════════════════════
+      // GUARDAR TEXTURA EN LOCALSTORAGE
+      // ══════════════════════════════════════════════════════════════════════
+      try {
+        // Obtener el canvas procesado de la textura
+        var canvas = modalCanvas;
+        if (canvas && canvas.width > 0 && canvas.height > 0) {
+          var preview = canvas.toDataURL('image/png');
+          
+          // Obtener la subcategoría seleccionada
+          var subcategoria = (categorySelect && categorySelect.value !== '__new__') ? categorySelect.value : '';
+          
+          // Guardar textura usando GestorTexturas
+          var texturaGuardada = GestorTexturas.guardar({
+            nombre: activeModalId || 'Textura sin nombre',
+            preview: preview,
+            categoria: 'Texturas',
+            subcategoria: subcategoria,
+            tolerance: item.tolerance || 32
+          });
+          
+          console.log('[Textura Incorporada]', texturaGuardada.nombre, 'v' + texturaGuardada.version, 'subcategoría:', texturaGuardada.subcategoria);
+          
+          // Mostrar notificación breve (opcional)
+          // Puedes agregar una notificación toast aquí si querés
+        }
+      } catch (err) {
+        console.error('[Error al guardar textura]', err);
+        if (err.message === 'QUOTA_EXCEEDED') {
+          alert('No hay suficiente espacio en el almacenamiento local. Eliminá algunas texturas antiguas.');
+        } else if (err.message === 'STORAGE_DISABLED') {
+          alert('El almacenamiento local está deshabilitado en tu navegador.');
+        }
+      }
+      // ══════════════════════════════════════════════════════════════════════
+      
       closeAdjustModal();
     });
 
@@ -2539,6 +2576,14 @@ function prepareCanvasFromImage(img) {
     var canvasWrap   = document.getElementById('elementosCanvasWrap');
     var grid         = document.getElementById('elementosGrid');
     var fileInput    = document.getElementById('elementosFileInput');
+
+    // DEBUG: Verificar que los elementos existan
+    console.log('[Elementos] canvasWrap:', canvasWrap);
+    console.log('[Elementos] grid:', grid);
+    console.log('[Elementos] fileInput:', fileInput);
+    if(!canvasWrap || !grid || !fileInput) {
+      console.error('[Elementos] FALTA algún elemento del DOM - el drag&drop no funcionará');
+    }
 
     var modalOverlay = document.getElementById('vectorizeModalOverlay');
     var modalCanvas  = document.getElementById('vectorizeModalCanvas');
@@ -3185,44 +3230,67 @@ function prepareCanvasFromImage(img) {
                 otros paneles (p.ej. "Personajes" de la Vista Temáticas) sin
                 duplicar el modal ni la lógica de procesamiento. -------- */
     function attachUploadGrid(canvasWrapEl, gridEl, fileInputEl, extraCardClass){
-      if(!canvasWrapEl || !gridEl || !fileInputEl) return;
+      console.log('[attachUploadGrid] Inicializando con:', { canvasWrapEl, gridEl, fileInputEl, extraCardClass });
+      if(!canvasWrapEl || !gridEl || !fileInputEl) {
+        console.error('[attachUploadGrid] FALTA algún elemento - abortando inicialización');
+        return;
+      }
+      console.log('[attachUploadGrid] ✅ Todos los elementos presentes - registrando listeners');
 
       /* -------- Click / drag & drop para abrir el selector de archivos -------- */
       canvasWrapEl.addEventListener('click', function(e){
-        if(e.target.closest('.elementos-upload-card')) return;
+        console.log('[attachUploadGrid] Click detectado en canvasWrap');
+        if(e.target.closest('.elementos-upload-card')) {
+          console.log('[attachUploadGrid] Click en tarjeta - ignorado');
+          return;
+        }
+        console.log('[attachUploadGrid] Abriendo selector de archivos');
         fileInputEl.click();
       });
 
       fileInputEl.addEventListener('click', function(e){ e.stopPropagation(); });
 
       fileInputEl.addEventListener('change', function(){
+        console.log('[attachUploadGrid] Change en fileInput - archivos:', fileInputEl.files.length);
         handleFiles(fileInputEl.files);
         fileInputEl.value = '';
       });
 
       ['dragenter','dragover'].forEach(function(evt){
         canvasWrapEl.addEventListener(evt, function(e){
+          console.log('[attachUploadGrid] ' + evt + ' detectado');
           e.preventDefault(); e.stopPropagation();
           canvasWrapEl.classList.add('drag-over');
         });
       });
       ['dragleave','dragend'].forEach(function(evt){
         canvasWrapEl.addEventListener(evt, function(e){
+          console.log('[attachUploadGrid] ' + evt + ' detectado');
           if(evt === 'dragleave' && canvasWrapEl.contains(e.relatedTarget)) return;
           canvasWrapEl.classList.remove('drag-over');
         });
       });
       canvasWrapEl.addEventListener('drop', function(e){
+        console.log('[attachUploadGrid] DROP detectado!', e.dataTransfer);
         e.preventDefault(); e.stopPropagation();
         canvasWrapEl.classList.remove('drag-over');
         if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+          console.log('[attachUploadGrid] Archivos en drop:', e.dataTransfer.files.length);
           handleFiles(e.dataTransfer.files);
+        } else {
+          console.error('[attachUploadGrid] No se encontraron archivos en el drop');
         }
       });
 
       function handleFiles(fileList){
+        console.log('[attachUploadGrid] handleFiles llamado con', fileList.length, 'archivos');
         Array.prototype.forEach.call(fileList, function(file){
-          if(!/^image\//.test(file.type)) return;
+          console.log('[attachUploadGrid] Procesando archivo:', file.name, file.type);
+          if(!/^image\//.test(file.type)) {
+            console.warn('[attachUploadGrid] No es imagen - ignorado:', file.name);
+            return;
+          }
+          console.log('[attachUploadGrid] Imagen válida - agregando:', file.name);
           addElementFromFile(file);
         });
       }

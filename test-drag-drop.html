@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Drag & Drop - Elementos</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    #elementosCanvasWrap {
+      width: 600px;
+      height: 400px;
+      background: white;
+      border: 3px dashed #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 20px auto;
+      transition: all 0.2s;
+    }
+    #elementosCanvasWrap.drag-over {
+      border-color: #4CAF50;
+      background: #e8f5e9;
+    }
+    #elementosDropHint {
+      text-align: center;
+      color: #999;
+      pointer-events: none;
+    }
+    #elementosGrid {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      overflow: auto;
+    }
+    .elementos-upload-card {
+      width: 150px;
+      height: 150px;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .elementos-upload-card img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .log {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow: auto;
+    }
+    .log div {
+      padding: 2px 0;
+      border-bottom: 1px solid #eee;
+    }
+    h1 { text-align: center; color: #333; }
+    .status { text-align: center; margin: 10px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Test: Drag & Drop de Imágenes</h1>
+  <div class="status">Arrastrá una imagen aquí abajo o hacé click para seleccionar</div>
+  
+  <div id="elementosCanvasWrap">
+    <div id="elementosGrid"></div>
+    <div id="elementosDropHint">
+      <div style="font-size:48px;">🧩</div>
+      <div>Arrastrá imágenes aquí</div>
+    </div>
+    <input type="file" id="elementosFileInput" accept="image/*" multiple style="display:none">
+  </div>
+
+  <div class="log" id="log">
+    <strong>Log de eventos:</strong>
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+    const canvasWrap = document.getElementById('elementosCanvasWrap');
+    const grid = document.getElementById('elementosGrid');
+    const fileInput = document.getElementById('elementosFileInput');
+
+    function addLog(message, color = '#333') {
+      const div = document.createElement('div');
+      div.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      div.style.color = color;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Verificar que los elementos existan
+    addLog(`✅ canvasWrap: ${canvasWrap ? 'OK' : 'FALTA'}`, canvasWrap ? 'green' : 'red');
+    addLog(`✅ grid: ${grid ? 'OK' : 'FALTA'}`, grid ? 'green' : 'red');
+    addLog(`✅ fileInput: ${fileInput ? 'OK' : 'FALTA'}`, fileInput ? 'green' : 'red');
+
+    // Click handler
+    canvasWrap.addEventListener('click', function(e) {
+      if(e.target.closest('.elementos-upload-card')) {
+        addLog('❌ Click en tarjeta existente - ignorado', 'orange');
+        return;
+      }
+      addLog('🖱️ Click detectado - abriendo selector de archivos', 'blue');
+      fileInput.click();
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function() {
+      addLog(`📁 Archivos seleccionados: ${fileInput.files.length}`, 'green');
+      handleFiles(fileInput.files);
+      fileInput.value = '';
+    });
+
+    // Drag events
+    ['dragenter','dragover'].forEach(function(evt){
+      canvasWrap.addEventListener(evt, function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        canvasWrap.classList.add('drag-over');
+        addLog(`🎯 ${evt} - zona activa`, 'purple');
+      });
+    });
+
+    ['dragleave','dragend'].forEach(function(evt){
+      canvasWrap.addEventListener(evt, function(e){
+        if(evt === 'dragleave' && canvasWrap.contains(e.relatedTarget)) {
+          addLog(`⚠️ ${evt} interno - ignorado`, 'gray');
+          return;
+        }
+        canvasWrap.classList.remove('drag-over');
+        addLog(`👋 ${evt} - zona desactivada`, 'purple');
+      });
+    });
+
+    canvasWrap.addEventListener('drop', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      canvasWrap.classList.remove('drag-over');
+      addLog(`📦 DROP detectado!`, 'green');
+      
+      if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+        addLog(`📸 Archivos recibidos: ${e.dataTransfer.files.length}`, 'green');
+        handleFiles(e.dataTransfer.files);
+      } else {
+        addLog(`❌ No se encontraron archivos en el drop`, 'red');
+      }
+    });
+
+    function handleFiles(fileList) {
+      addLog(`🔄 Procesando ${fileList.length} archivo(s)...`, 'blue');
+      
+      Array.prototype.forEach.call(fileList, function(file){
+        addLog(`  📄 ${file.name} (${file.type})`, 'gray');
+        
+        if(!/^image\//.test(file.type)) {
+          addLog(`  ❌ No es una imagen - ignorado`, 'red');
+          return;
+        }
+        
+        addLog(`  ✅ Imagen válida - creando tarjeta`, 'green');
+        addImageCard(file);
+      });
+    }
+
+    function addImageCard(file) {
+      const card = document.createElement('div');
+      card.className = 'elementos-upload-card';
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        card.appendChild(img);
+        addLog(`  🎨 Imagen cargada: ${file.name}`, 'green');
+      };
+      reader.readAsDataURL(file);
+      
+      grid.appendChild(card);
+    }
+
+    addLog('🚀 Listeners registrados - listo para recibir imágenes!', 'green');
+  </script>
+</body>
+</html>

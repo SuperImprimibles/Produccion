@@ -1851,6 +1851,10 @@
 
   const elementsGrid = document.getElementById('elements-grid');
 
+  // ══════════════════════════════════════════════════════════════════════
+  // TARJETAS DE EJEMPLO COMENTADAS - Solo se mostrarán elementos guardados
+  // ══════════════════════════════════════════════════════════════════════
+  /*
   elementNames.forEach(itemName => {
     const card = document.createElement('div');
     card.className = 'element-card';
@@ -1955,6 +1959,8 @@
       });
     }
   });
+  */
+  console.log('[Marketing] Tarjetas de ejemplo comentadas - Solo se mostrarán elementos guardados');
 
   // ══════════════════════════════════════════════════════════════════════
   // Tarea 7.4: aplicarVistasPrevia() - Aplicar previews de plantillas
@@ -2017,20 +2023,31 @@
   // CARGAR ELEMENTOS GUARDADOS DESDE LOCALSTORAGE
   // ══════════════════════════════════════════════════════════════════════
   function cargarElementosGuardados() {
+    console.log('[cargarElementosGuardados] Iniciando carga...');
     if (typeof GestorElementos === 'undefined') {
       console.warn('[Marketing] GestorElementos no está disponible');
       return;
     }
     
     var elementosGuardados = GestorElementos.listar();
+    console.log('[cargarElementosGuardados] Elementos en localStorage:', elementosGuardados);
+    
+    if (!elementosGuardados || elementosGuardados.length === 0) {
+      console.log('[cargarElementosGuardados] No hay elementos guardados');
+      return;
+    }
     
     elementosGuardados.forEach(function(elemento) {
-      // Verificar si ya existe una tarjeta con este nombre
-      var existingCard = document.querySelector('#elements-grid .element-card[data-name="' + elemento.nombre + '"]');
+      console.log('[cargarElementosGuardados] Procesando elemento:', elemento);
+      // Verificar si ya existe una tarjeta con este nombre Y categoria Elementos
+      var existingCard = document.querySelector('#elements-grid .element-card[data-name="' + elemento.nombre + '"][data-marketing-category="Elementos"]');
+      console.log('[cargarElementosGuardados] Tarjeta existente para "' + elemento.nombre + '":', existingCard);
+      
       if (existingCard) {
         // Actualizar la tarjeta existente con la imagen guardada
         var square = existingCard.querySelector('.element-square');
         if (square && elemento.preview) {
+          console.log('[cargarElementosGuardados] Actualizando tarjeta existente');
           square.style.backgroundImage = 'url("' + elemento.preview + '")';
           square.style.backgroundSize = 'cover';
           square.style.backgroundPosition = 'center';
@@ -2038,12 +2055,19 @@
         }
       } else {
         // Crear una nueva tarjeta para este elemento
+        console.log('[cargarElementosGuardados] Creando nueva tarjeta para:', elemento.nombre);
         crearTarjetaElementoGuardado(elemento);
       }
     });
   }
 
   function crearTarjetaElementoGuardado(elemento) {
+    console.log('[crearTarjetaElementoGuardado] Creando tarjeta para:', elemento);
+    if (!elementsGrid) {
+      console.error('[crearTarjetaElementoGuardado] elementsGrid no está definido!');
+      return;
+    }
+    
     var card = document.createElement('div');
     card.className = 'element-card';
     card.dataset.name = elemento.nombre;
@@ -2116,7 +2140,9 @@
 
     card.appendChild(topRow);
     card.appendChild(row);
+    console.log('[crearTarjetaElementoGuardado] Agregando tarjeta al DOM...', card);
     elementsGrid.appendChild(card);
+    console.log('[crearTarjetaElementoGuardado] Tarjeta agregada! Total en grid:', elementsGrid.children.length);
 
     var lockInput = row.querySelector('.element-lock-toggle input');
     if (lockInput) {
@@ -2126,15 +2152,187 @@
         }
       });
     }
+    
+    console.log('[crearTarjetaElementoGuardado] Tarjeta completa creada para:', elemento.nombre);
+    
+    // Reaplicar el filtro para que la nueva tarjeta se muestre/oculte según corresponda
+    // (solo si elementsToolbar ya está definido - puede no estarlo durante la carga inicial)
+    if (typeof applyElementsCategoryFilter === 'function') {
+      try {
+        console.log('[crearTarjetaElementoGuardado] Aplicando filtros de categoría...');
+        applyElementsCategoryFilter();
+      } catch (e) {
+        console.log('[crearTarjetaElementoGuardado] No se pudo aplicar filtro todavía (carga inicial):', e.message);
+      }
+    }
   }
 
   // Cargar elementos guardados al iniciar
-  cargarElementosGuardados();
+  // NO llamar acá porque elementsToolbar aún no existe
+  // console.log('[Init] Llamando a cargarElementosGuardados en la inicialización...');
+  // cargarElementosGuardados();
 
   // Escuchar cambios en el almacenamiento para recargar automáticamente
   window.addEventListener('superimprimible:elementos-updated', function() {
     console.log('[Marketing] Recargando elementos guardados...');
     cargarElementosGuardados();
+  });
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ══════════════════════════════════════════════════════════════════════
+  // CARGAR TEXTURAS GUARDADAS DESDE LOCALSTORAGE
+  // ══════════════════════════════════════════════════════════════════════
+  function cargarTexturasGuardadas() {
+    console.log('[cargarTexturasGuardadas] Iniciando carga...');
+    if (typeof GestorTexturas === 'undefined') {
+      console.warn('[Marketing] GestorTexturas no está disponible');
+      return;
+    }
+    
+    var texturasGuardadas = GestorTexturas.listar();
+    console.log('[cargarTexturasGuardadas] Texturas en localStorage:', texturasGuardadas);
+    
+    if (!texturasGuardadas || texturasGuardadas.length === 0) {
+      console.log('[cargarTexturasGuardadas] No hay texturas guardadas');
+      return;
+    }
+    
+    texturasGuardadas.forEach(function(textura) {
+      console.log('[cargarTexturasGuardadas] Procesando textura:', textura);
+      // Verificar si ya existe una tarjeta con este nombre Y categoria Texturas
+      var existingCard = document.querySelector('#elements-grid .element-card[data-name="' + textura.nombre + '"][data-marketing-category="Texturas"]');
+      console.log('[cargarTexturasGuardadas] Tarjeta existente para "' + textura.nombre + '":', existingCard);
+      
+      if (existingCard) {
+        // Actualizar la tarjeta existente con la imagen guardada
+        var square = existingCard.querySelector('.element-square');
+        if (square && textura.preview) {
+          console.log('[cargarTexturasGuardadas] Actualizando tarjeta existente');
+          square.style.backgroundImage = 'url("' + textura.preview + '")';
+          square.style.backgroundSize = 'cover';
+          square.style.backgroundPosition = 'center';
+          square.style.backgroundRepeat = 'no-repeat';
+        }
+      } else {
+        // Crear una nueva tarjeta para esta textura
+        console.log('[cargarTexturasGuardadas] Creando nueva tarjeta para:', textura.nombre);
+        crearTarjetaTexturaGuardada(textura);
+      }
+    });
+  }
+
+  function crearTarjetaTexturaGuardada(textura) {
+    console.log('[crearTarjetaTexturaGuardada] Creando tarjeta para:', textura);
+    if (!elementsGrid) {
+      console.error('[crearTarjetaTexturaGuardada] elementsGrid no está definido!');
+      return;
+    }
+    
+    var card = document.createElement('div');
+    card.className = 'element-card';
+    card.dataset.name = textura.nombre;
+    card.dataset.category = textura.categoria || 'Sin categoría';
+    card.dataset.marketingCategory = 'Texturas';
+    card.dataset.marketingSubcategory = textura.subcategoria || '';
+
+    var topRow = document.createElement('div');
+    topRow.className = 'element-top-row';
+    topRow.addEventListener('click', function(e) {
+      if (e.target.closest('button, input, label, a')) return;
+      // openElementDetailModal(textura.nombre); // Descomentar si existe esta función
+    });
+
+    var square = document.createElement('div');
+    square.className = 'element-square';
+    
+    // Aplicar la imagen guardada
+    if (textura.preview) {
+      square.style.backgroundImage = 'url("' + textura.preview + '")';
+      square.style.backgroundSize = 'cover';
+      square.style.backgroundPosition = 'center';
+      square.style.backgroundRepeat = 'no-repeat';
+    }
+
+    var percentBadge = document.createElement('span');
+    percentBadge.className = 'element-square-percent';
+    percentBadge.textContent = '100%';
+    square.appendChild(percentBadge);
+
+    var dimensionBadge = document.createElement('button');
+    dimensionBadge.type = 'button';
+    dimensionBadge.className = 'square-dimension-badge';
+    dimensionBadge.textContent = '2D';
+    dimensionBadge.setAttribute('aria-label', 'Cambiar entre 2D y 3D');
+    dimensionBadge.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dimensionBadge.textContent = dimensionBadge.textContent === '2D' ? '3D' : '2D';
+    });
+    square.appendChild(dimensionBadge);
+
+    var editPencilSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+
+    var specs = document.createElement('div');
+    specs.className = 'element-specs';
+    specs.innerHTML =
+      '<div class="spec-row"><span class="spec-label">Medidas</span><span class="spec-value">Auto</span>' +
+        '<button type="button" class="spec-edit-btn" data-action="edit-medidas" aria-label="Editar medidas">' + editPencilSvg + '</button></div>' +
+      '<div class="spec-row"><span class="spec-label">Categoria:</span><span class="spec-value">' + (textura.categoria || 'Texturas') + '</span>' +
+        '<button type="button" class="spec-edit-btn" data-action="edit-categoria" aria-label="Editar categoria">' + editPencilSvg + '</button></div>' +
+      '<div class="spec-row"><span class="spec-label">Subcategoria:</span><span class="spec-value">' + (textura.subcategoria || 'Sin subcategoría') + '</span>' +
+        '<button type="button" class="spec-edit-btn" data-action="edit-subcategoria" aria-label="Editar subcategoria">' + editPencilSvg + '</button></div>';
+
+    topRow.appendChild(square);
+    topRow.appendChild(specs);
+
+    var row = document.createElement('div');
+    row.className = 'quantities-row';
+    row.innerHTML =
+      '<span class="quantities-label">' + textura.nombre + '</span>' +
+      '<label class="element-lock-toggle">' +
+        '<input type="checkbox" value="">' +
+        '<div class="element-lock-track">' +
+          '<svg class="element-lock-icon open" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>' +
+          '</svg>' +
+          '<svg class="element-lock-icon closed" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+            '<path fill-rule="evenodd" d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z"></path>' +
+          '</svg>' +
+          '<div class="element-lock-thumb"></div>' +
+        '</div>' +
+      '</label>';
+
+    card.appendChild(topRow);
+    card.appendChild(row);
+    console.log('[crearTarjetaTexturaGuardada] Agregando tarjeta al DOM...', card);
+    elementsGrid.appendChild(card);
+    console.log('[crearTarjetaTexturaGuardada] Tarjeta agregada! Total en grid:', elementsGrid.children.length);
+
+    var lockInput = row.querySelector('.element-lock-toggle input');
+    if (lockInput) {
+      lockInput.addEventListener('change', function() {
+        if (typeof applyElementsCategoryFilter === 'function') {
+          applyElementsCategoryFilter();
+        }
+      });
+    }
+    
+    console.log('[crearTarjetaTexturaGuardada] Tarjeta completa creada para:', textura.nombre);
+    
+    // Reaplicar el filtro para que la nueva tarjeta se muestre/oculte según corresponda
+    if (typeof applyElementsCategoryFilter === 'function') {
+      try {
+        console.log('[crearTarjetaTexturaGuardada] Aplicando filtros de categoría...');
+        applyElementsCategoryFilter();
+      } catch (e) {
+        console.log('[crearTarjetaTexturaGuardada] No se pudo aplicar filtro todavía (carga inicial):', e.message);
+      }
+    }
+  }
+
+  // Escuchar cambios en el almacenamiento para recargar automáticamente
+  window.addEventListener('superimprimible:texturas-updated', function() {
+    console.log('[Marketing] Recargando texturas guardadas...');
+    cargarTexturasGuardadas();
   });
   // ══════════════════════════════════════════════════════════════════════
 
@@ -2615,6 +2813,12 @@
   }
 
   applyElementsCategoryFilter();
+
+  // Cargar elementos y texturas guardados DESPUÉS de que elementsToolbar esté definido
+  console.log('[Init] Llamando a cargarElementosGuardados después de inicializar filtros...');
+  cargarElementosGuardados();
+  console.log('[Init] Llamando a cargarTexturasGuardadas después de inicializar filtros...');
+  cargarTexturasGuardadas();
 
   document.querySelectorAll('.stepper-btn').forEach(btn => {
     if (btn.dataset.action !== 'inc' && btn.dataset.action !== 'dec') return;
