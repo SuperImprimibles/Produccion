@@ -754,7 +754,7 @@ function prepareCanvasFromImage(img) {
     });
   }
 
-  // Botón "Incorporar": exporta cada carácter detectado como SVG individual
+  // Botón "Incorporar": guarda la fuente en localStorage y la hace disponible en Marketing > Fuentes
   if (fuentesIncorporarBtn){
     fuentesIncorporarBtn.addEventListener('click', () => {
       const chars = Object.keys(extractedFuentesChars);
@@ -762,22 +762,58 @@ function prepareCanvasFromImage(img) {
         alert('Primero arrastrá o cargá una imagen con las letras de la fuente.');
         return;
       }
-      const prefix = fuentesFontName ? fuentesFontName.replace(/[/\\?%*:|"<>\s]/g, '_') : 'fuente';
-      chars.forEach(char => {
-        const canvas = extractedFuentesChars[char];
-        const svg = canvasToSVG(canvas, char);
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const safeChar = char.replace(/[/\\?%*:|"<>]/g, '_');
-        a.download = prefix + '_' + safeChar + '.svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-      alert('¡' + chars.length + ' letras incorporadas y exportadas como SVG!');
+      
+      const nombre = fuentesFontName || 'Fuente sin nombre';
+      
+      // ══════════════════════════════════════════════════════════════════════
+      // GUARDAR FUENTE EN LOCALSTORAGE
+      // ══════════════════════════════════════════════════════════════════════
+      try {
+        // Convertir cada canvas a dataURL (PNG)
+        const caracteres = {};
+        chars.forEach(char => {
+          const canvas = extractedFuentesChars[char];
+          if (canvas && canvas.width > 0 && canvas.height > 0) {
+            caracteres[char] = canvas.toDataURL('image/png');
+          }
+        });
+        
+        // Generar preview del nombre (si hay fuentesNombrePreview renderizado)
+        let preview = null;
+        if (fuentesNombrePreview && fuentesNombrePreview.querySelector('canvas')) {
+          const previewCanvas = fuentesNombrePreview.querySelector('canvas');
+          if (previewCanvas && previewCanvas.width > 0 && previewCanvas.height > 0) {
+            preview = previewCanvas.toDataURL('image/png');
+          }
+        }
+        
+        // Guardar fuente usando GestorFuentes
+        const fuenteGuardada = GestorFuentes.guardar({
+          nombre: nombre,
+          caracteres: caracteres,
+          preview: preview,
+          categoria: 'Fuentes',
+          tintColor: fuentesTintHex
+        });
+        
+        console.log('[Fuente Incorporada]', fuenteGuardada.nombre, 'v' + fuenteGuardada.version, 'con', Object.keys(fuenteGuardada.caracteres).length, 'caracteres');
+        
+        alert('¡Fuente "' + nombre + '" incorporada con ' + chars.length + ' caracteres!');
+      } catch (err) {
+        console.error('[Error al guardar fuente]', err);
+        if (err.message === 'QUOTA_EXCEEDED') {
+          alert('No hay suficiente espacio en el almacenamiento local. Eliminá algunas fuentes antiguas.');
+        } else if (err.message === 'STORAGE_DISABLED') {
+          alert('El almacenamiento local está deshabilitado en tu navegador.');
+        } else if (err.message === 'NOMBRE_VACIO') {
+          alert('Por favor ingresá un nombre para la fuente.');
+        } else if (err.message === 'CARACTERES_VACIOS') {
+          alert('No hay caracteres para guardar.');
+        } else {
+          alert('Error al guardar la fuente: ' + err.message);
+        }
+      }
+      // ══════════════════════════════════════════════════════════════════════
     });
   }
 })();
