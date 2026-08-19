@@ -316,9 +316,11 @@
       <div id="elementosCanvasWrap">
         <div id="elementosGrid"></div>
         <div id="elementosDropHint">
-          <div style="font-size:34px;">🧩</div>
           <div class="elementos-drophint-text">Elementos</div>
         </div>
+        <button type="button" id="elementosIncorporarTodosBtn" class="incorporar-todos-btn" style="display:none;">
+          <span>Incorporar Todos</span>
+        </button>
         <input type="file" id="elementosFileInput" accept="image/*" multiple style="display:none">
       </div>
 
@@ -368,6 +370,7 @@
       <div class="vectorize-modal-body">
         <div class="vectorize-modal-main">
           <div class="vectorize-modal-canvaswrap">
+            <div id="vectorizeRecommendedSizes" class="vectorize-recommended-sizes"></div>
             <div class="vectorize-modal-canvas-zoom" id="vectorizeCanvasZoom">
               <canvas id="vectorizeModalCanvas"></canvas>
               <canvas id="vectorizeBrushOverlay"></canvas>
@@ -478,9 +481,11 @@
       <div id="texturasCanvasWrap">
       <div id="texturasGrid"></div>
       <div id="texturasDropHint">
-        <div style="font-size:34px;">🧩</div>
         <div class="texturas-drophint-text">Texturas</div>
       </div>
+      <button type="button" id="texturasIncorporarTodosBtn" class="incorporar-todos-btn" style="display:none;">
+        <span>Incorporar Todos</span>
+      </button>
       <input type="file" id="texturasFileInput" accept="image/*" multiple style="display:none">
       </div>
 
@@ -493,6 +498,7 @@
       <div class="vectorize-modal-body">
         <div class="vectorize-modal-main">
           <div class="vectorize-modal-canvaswrap texturas-modal-canvaswrap">
+            <div id="texturasRecommendedSizes" class="vectorize-recommended-sizes"></div>
             <div class="vectorize-modal-canvas-zoom" id="texturasVectorizeCanvasZoom">
               <canvas id="texturasVectorizeModalCanvas"></canvas>
               <canvas id="texturasVectorizeBrushOverlay"></canvas>

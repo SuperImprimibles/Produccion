@@ -6896,8 +6896,8 @@ body:not(.is-view-diseno) #floating-panel{
   cursor: grabbing;
 }
 
-/* Botón de eliminar */
-.sticker-delete-btn {
+/* Botón de eliminar - CSS deprecado, ahora se controla desde JavaScript inline */
+/* .sticker-delete-btn {
   position: absolute;
   top: -12px;
   right: -12px;
@@ -6926,7 +6926,7 @@ body:not(.is-view-diseno) #floating-panel{
 .sticker-wrapper.selected .sticker-delete-btn,
 .sticker-wrapper:hover .sticker-delete-btn {
   opacity: 1;
-}
+} */
 
 /* Drop zone visual feedback */
 .sticker-drop-zone.drag-over-sticker {
@@ -6985,6 +6985,8 @@ body:not(.is-view-diseno) #floating-panel{
   padding:14px 16px;
   scrollbar-width:none;
   -ms-overflow-style:none;
+  display: flex;
+  flex-direction: column;
 }
 
 .side-panel-2-body::-webkit-scrollbar{
@@ -7161,6 +7163,21 @@ body:not(.is-view-diseno) #floating-panel{
 .sp2-row > .sp2-section:has(#sp2FontChooseBtn),
 .sp2-row > .sp2-section:has(#tematicasFontChooseBtn){
   flex:0 0 auto;
+}
+
+/* Hacer que las secciones de Personajes y Fondos crezcan para llenar el espacio */
+#tematicasCardBody > div:nth-child(3),
+#tematicasCardBody > div:nth-child(4) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#tematicasCardBody > div:nth-child(3) .sp2-personajes-container,
+#tematicasCardBody > div:nth-child(4) .sp2-personajes-container {
+  flex: 1;
+  min-height: 150px;
 }
 
 .sp2-section-title{
@@ -8390,6 +8407,7 @@ body:not(.is-view-diseno) #floating-panel{
 #view-fuentes > div.fuentes-card-wrap{
   flex:0 0 50px;
   height:50px;
+  display: none; /* Oculto por defecto, se muestra cuando hay fuentes cargadas */
 }
 #fuentesCard{
   flex:1 1 auto;
@@ -9090,6 +9108,16 @@ body:not(.is-view-diseno) #floating-panel{
       repeating-linear-gradient(0deg, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 5px),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 5px),
       radial-gradient(circle at 50% 45%, rgba(255,255,255,0.12), transparent 65%);
+  }
+  .vectorize-recommended-sizes{
+    position:absolute;
+    top:8px;
+    left:8px;
+    font-size:11px;
+    color: rgba(255,255,255,0.7);
+    z-index:10;
+    font-weight:400;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
   .vectorize-modal-canvaswrap canvas{
     max-width:100%;
@@ -10527,4 +10555,368 @@ body:not(.is-view-diseno) #floating-panel{
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+
+/* ========================================================================
+   VALIDADOR DE CALIDAD DE IMPRESIÓN
+   ======================================================================== */
+
+/* Overlay del modal */
+.quality-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(28, 27, 34, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.quality-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal principal */
+.quality-modal {
+  position: relative;
+  max-width: 520px;
+  width: 90%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 30px 70px -20px rgba(60, 50, 80, 0.4),
+    0 10px 30px -10px rgba(60, 50, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 32px;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.quality-modal-overlay.open .quality-modal {
+  transform: scale(1);
+}
+
+/* Botón cerrar */
+.quality-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(91, 88, 102, 0.1);
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quality-modal-close:hover {
+  background: rgba(91, 88, 102, 0.18);
+  color: var(--ink);
+}
+
+/* Icono principal */
+.quality-modal-icon {
+  font-size: 56px;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+/* Título */
+.quality-modal-title {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* Cuerpo del modal */
+.quality-modal-body {
+  margin-bottom: 24px;
+}
+
+.quality-modal-message {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  white-space: pre-line;
+}
+
+.quality-modal-message:last-child {
+  margin-bottom: 0;
+}
+
+/* Detalles técnicos */
+.quality-modal-details {
+  background: rgba(91, 88, 102, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quality-modal-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.quality-modal-detail-label {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.quality-modal-detail-value {
+  color: var(--ink);
+  font-weight: 600;
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+}
+
+/* Botones del modal */
+.quality-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quality-modal-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.quality-modal-btn--primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(58, 168, 201, 0.3);
+}
+
+.quality-modal-btn--primary:hover {
+  background: #2f94b5;
+  box-shadow: 0 6px 16px rgba(58, 168, 201, 0.4);
+  transform: translateY(-1px);
+}
+
+.quality-modal-btn--secondary {
+  background: rgba(91, 88, 102, 0.1);
+  color: var(--ink);
+}
+
+.quality-modal-btn--secondary:hover {
+  background: rgba(91, 88, 102, 0.18);
+}
+
+.quality-modal-btn--tertiary {
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.quality-modal-btn--tertiary:hover {
+  background: rgba(91, 88, 102, 0.08);
+  color: var(--ink);
+}
+
+/* Variantes de color según nivel de calidad */
+.quality-modal--excellent .quality-modal-icon {
+  color: #10b981;
+}
+
+.quality-modal--acceptable .quality-modal-icon {
+  color: #f59e0b;
+}
+
+.quality-modal--poor .quality-modal-icon {
+  color: #ef4444;
+}
+
+.quality-modal--unknown .quality-modal-icon {
+  color: #94a3b8;
+}
+
+/* ── Indicador visual de calidad (para tarjetas) ────────────────────── */
+
+.quality-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  cursor: help;
+}
+
+.quality-indicator__emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.quality-indicator__dpi {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+}
+
+/* Variantes de color */
+.quality-indicator--excellent {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.quality-indicator--acceptable {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.quality-indicator--poor {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.quality-indicator--unknown {
+  background: rgba(148, 163, 184, 0.15);
+  color: #64748b;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.quality-indicator:hover {
+  transform: scale(1.05);
+}
+
+/* Badge flotante para elementos/texturas */
+.quality-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.quality-badge .quality-indicator {
+  pointer-events: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Animación de entrada */
+@keyframes qualityBadgeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.quality-badge {
+  animation: qualityBadgeIn 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .quality-modal {
+    max-width: 95%;
+    padding: 24px;
+  }
+
+  .quality-modal-title {
+    font-size: 19px;
+  }
+
+  .quality-modal-icon {
+    font-size: 48px;
+  }
+
+  .quality-modal-message {
+    font-size: 14px;
+  }
+
+  .quality-modal-actions {
+    gap: 8px;
+  }
+
+  .quality-modal-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+
+/* Botón flotante "Incorporar Todos" para vistas de texturas y elementos */
+.incorporar-todos-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 28px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 
+              0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.incorporar-todos-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5), 
+              0 6px 16px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%);
+}
+
+.incorporar-todos-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3), 
+              0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.incorporar-todos-btn span {
+  position: relative;
+  z-index: 1;
 }

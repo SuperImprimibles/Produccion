@@ -329,7 +329,16 @@ function prepareCanvasFromImage(img) {
   const fuentesNombreInput = document.getElementById('fuentesNombreInput');
   const fuentesIncorporarBtn = document.getElementById('fuentesIncorporarBtn');
   const fuentesNombrePreview = document.getElementById('fuentesNombrePreview');
+  const fuentesCardWrap = document.querySelector('#view-fuentes > .fuentes-card-wrap');
   if (!fuentesGridWrap || !fuentesDropHint || !fuentesGrid) return;
+
+  // Función para controlar la visibilidad del panel lateral
+  function updateFuentesPanelVisibility() {
+    const hasChars = Object.keys(extractedFuentesChars).length > 0;
+    if (fuentesCardWrap) {
+      fuentesCardWrap.style.display = hasChars ? 'flex' : 'none';
+    }
+  }
 
   // Orden esperado de los 76 caracteres (debe coincidir 1 a 1 con las 76 tarjetas de #fuentesGrid)
   const FUENTES_CHAR_ORDER = [
@@ -343,6 +352,9 @@ function prepareCanvasFromImage(img) {
   let originalFuentesChars = {};  // { char: canvas } — versión original tal cual se extrajo, nunca se pisa
   let fuentesFontName = '';
   let fuentesTintHex = null; // color elegido en #fuentesVectorizeToolColor, o null = sin tinte
+
+  // Ocultar el panel al inicio si no hay caracteres (después de definir extractedFuentesChars)
+  updateFuentesPanelVisibility();
 
   // ---------- Utilidades de color para el tinte de letras (solo cambia el matiz/Hue;
   //            no toca saturación ni luminosidad, así se preserva el sombreado/textura
@@ -612,6 +624,7 @@ function prepareCanvasFromImage(img) {
         card.removeAttribute('data-char');
       }
     }
+    updateFuentesPanelVisibility();
   }
 
   // ---------- Procesar la imagen cargada: detectar las 76 letras y llenar la grilla ----------
@@ -661,6 +674,7 @@ function prepareCanvasFromImage(img) {
     });
 
     fuentesGridWrap.classList.add('has-image');
+    updateFuentesPanelVisibility();
     requestAnimationFrame(function(){
       if (typeof layoutFuentesGrid === 'function') layoutFuentesGrid();
       window.dispatchEvent(new Event('resize'));
@@ -799,6 +813,20 @@ function prepareCanvasFromImage(img) {
         console.log('[Fuente Incorporada]', fuenteGuardada.nombre, 'v' + fuenteGuardada.version, 'con', Object.keys(fuenteGuardada.caracteres).length, 'caracteres');
         
         alert('¡Fuente "' + nombre + '" incorporada con ' + chars.length + ' caracteres!');
+        
+        // Limpiar la grilla y reiniciar la vista completa
+        extractedFuentesChars = {};
+        originalFuentesChars = {};
+        clearAllCards();
+        
+        // Reiniciar la vista: ocultar grilla y mostrar drop hint
+        fuentesGridWrap.classList.remove('has-image');
+        if (fuentesNombreInput) fuentesNombreInput.value = '';
+        fuentesFontName = '';
+        fuentesTintHex = null;
+        
+        // Actualizar la visibilidad del panel lateral
+        updateFuentesPanelVisibility();
       } catch (err) {
         console.error('[Error al guardar fuente]', err);
         if (err.message === 'QUOTA_EXCEEDED') {
@@ -825,6 +853,7 @@ function prepareCanvasFromImage(img) {
     var canvasWrap   = document.getElementById('texturasCanvasWrap');
     var grid         = document.getElementById('texturasGrid');
     var fileInput    = document.getElementById('texturasFileInput');
+    var incorporarTodosBtn = document.getElementById('texturasIncorporarTodosBtn');
 
     var modalOverlay = document.getElementById('texturasVectorizeModalOverlay');
     var modalCanvas  = document.getElementById('texturasVectorizeModalCanvas');
@@ -845,6 +874,81 @@ function prepareCanvasFromImage(img) {
     var comicPaletteBtns = comicPalette ? comicPalette.querySelectorAll('.vcp-item') : [];
     var comicPaletteTarget = null; // <input type="color"> que va a recibir el valor elegido
     var firstDetectedColorInput = null; // <input> del primer color detectado, sincronizado con #texturasVectorizeColorSwatchTrigger
+
+    // Función para actualizar la visibilidad del botón "Incorporar Todos"
+    function updateIncorporarTodosBtn() {
+      if (!incorporarTodosBtn || !grid) return;
+      var cards = grid.querySelectorAll('.texturas-upload-card');
+      incorporarTodosBtn.style.display = cards.length > 0 ? 'flex' : 'none';
+    }
+
+    // Event listener para el botón "Incorporar Todos"
+    if (incorporarTodosBtn) {
+      incorporarTodosBtn.addEventListener('click', function() {
+        var cards = grid.querySelectorAll('.texturas-upload-card');
+        if (cards.length === 0) return;
+        
+        // Incorporar todas las texturas automáticamente
+        var confirmMsg = '¿Incorporar todas las ' + cards.length + ' texturas?';
+        if (!confirm(confirmMsg)) return;
+        
+        // Procesar cada tarjeta: guardar y eliminar con efecto
+        var incorporadas = 0;
+        cards.forEach(function(card) {
+          var id = card.dataset.id;
+          var item = items[id];
+          if (!item) return;
+          
+          try {
+            // Crear un canvas temporal para esta textura
+            var img = item.img;
+            var MAXDIM = 900;
+            var scale = Math.min(1, MAXDIM / Math.max(img.naturalWidth, img.naturalHeight));
+            var w = Math.max(1, Math.round(img.naturalWidth * scale));
+            var h = Math.max(1, Math.round(img.naturalHeight * scale));
+            
+            var tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            var ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            var preview = tempCanvas.toDataURL('image/png');
+            
+            // Calcular dimensiones para 300 DPI usando imagen original
+            var anchoCm = (img.naturalWidth / 300) * 2.54;
+            var altoCm = (img.naturalHeight / 300) * 2.54;
+            
+            // Guardar textura con categoría por defecto
+            var texturaGuardada = GestorTexturas.guardar({
+              nombre: id || 'Textura ' + (incorporadas + 1),
+              preview: preview,
+              categoria: 'Texturas',
+              subcategoria: '',
+              tolerance: item.tolerance || 32,
+              medidas: {
+                ancho: Math.round(anchoCm * 10) / 10,
+                alto: Math.round(altoCm * 10) / 10
+              }
+            });
+            
+            console.log('[Textura Incorporada]', texturaGuardada.nombre);
+            incorporadas++;
+            
+            // Eliminar tarjeta directamente
+            card.remove();
+            delete items[id];
+            updateIncorporarTodosBtn();
+          } catch (err) {
+            console.error('[Error al incorporar textura]', id, err);
+          }
+        });
+        
+        if (incorporadas > 0) {
+          alert('¡' + incorporadas + ' texturas incorporadas exitosamente!');
+        }
+      });
+    }
 
     /* -------- Paleta estilo cómic (From Uiverse.io by chase2k25): un popover
                 único y reutilizable, no atado a ningún "pincel" (ya no
@@ -1656,6 +1760,7 @@ function prepareCanvasFromImage(img) {
           '<button type="button" class="texturas-upload-remove" title="Quitar">×</button>';
         gridEl.appendChild(card);
         refreshHasImage(canvasWrapEl, gridEl);
+        updateIncorporarTodosBtn();
 
         card.querySelector('.texturas-upload-remove').addEventListener('click', function(e){
           e.stopPropagation();
@@ -1665,6 +1770,7 @@ function prepareCanvasFromImage(img) {
           delete items[id];
           delete pendingStarts[id];
           refreshHasImage(canvasWrapEl, gridEl);
+          updateIncorporarTodosBtn();
         });
 
         var reader = new FileReader();
@@ -2444,6 +2550,22 @@ function prepareCanvasFromImage(img) {
       if(window.__syncTexturasVectorizeBrushOverlay) window.__syncTexturasVectorizeBrushOverlay();
       if(window.__resetTexturasVectorizeZoom) window.__resetTexturasVectorizeZoom();
 
+      // ── Calcular y mostrar medidas recomendadas ──
+      var recommendedSizesEl = document.getElementById('texturasRecommendedSizes');
+      if(recommendedSizesEl){
+        try {
+          // Calcular tamaño óptimo para 300 DPI
+          var anchoCm = (img.naturalWidth / 300) * 2.54;
+          var altoCm = (img.naturalHeight / 300) * 2.54;
+          
+          // Mostrar solo las medidas
+          recommendedSizesEl.textContent = anchoCm.toFixed(1) + ' × ' + altoCm.toFixed(1) + ' cm';
+        } catch(e){
+          console.warn('[openAdjustModal] Error calculando medidas:', e);
+          recommendedSizesEl.style.display = 'none';
+        }
+      }
+
       modalOverlay.classList.add('open');
       // vuelve a dibujar los cuadros de texto que ya tenía este elemento (si los tenía)
       renderModalTextboxes(id);
@@ -2599,8 +2721,18 @@ function prepareCanvasFromImage(img) {
           
           console.log('[Textura Incorporada]', texturaGuardada.nombre, 'v' + texturaGuardada.version, '- Tamaño óptimo:', texturaGuardada.medidas.ancho, '×', texturaGuardada.medidas.alto, 'cm', '(', imgOriginal.naturalWidth, '×', imgOriginal.naturalHeight, 'px', '@ 300 DPI)', 'subcategoría:', texturaGuardada.subcategoria);
           
-          // Mostrar notificación breve (opcional)
-          // Puedes agregar una notificación toast aquí si querés
+          // Cerrar el modal primero
+          closeAdjustModal();
+          
+          // Eliminar la tarjeta directamente
+          var card = item.cardEl;
+          if (card) {
+            card.remove();
+            delete items[activeModalId];
+            updateIncorporarTodosBtn();
+          }
+        } else {
+          closeAdjustModal();
         }
       } catch (err) {
         console.error('[Error al guardar textura]', err);
@@ -2609,10 +2741,9 @@ function prepareCanvasFromImage(img) {
         } else if (err.message === 'STORAGE_DISABLED') {
           alert('El almacenamiento local está deshabilitado en tu navegador.');
         }
+        closeAdjustModal();
       }
       // ══════════════════════════════════════════════════════════════════════
-      
-      closeAdjustModal();
     });
 
   })();
@@ -2623,6 +2754,7 @@ function prepareCanvasFromImage(img) {
     var canvasWrap   = document.getElementById('elementosCanvasWrap');
     var grid         = document.getElementById('elementosGrid');
     var fileInput    = document.getElementById('elementosFileInput');
+    var incorporarTodosBtn = document.getElementById('elementosIncorporarTodosBtn');
 
     // DEBUG: Verificar que los elementos existan
     console.log('[Elementos] canvasWrap:', canvasWrap);
@@ -2648,6 +2780,83 @@ function prepareCanvasFromImage(img) {
     var colorEyedropper  = document.getElementById('vectorizeColorEyedropper');
     var colorSwatchTrigger = document.getElementById('vectorizeColorSwatchTrigger');
     var comicPalette = document.getElementById('vectorizeComicPalette');
+
+    // Función para actualizar la visibilidad del botón "Incorporar Todos"
+    function updateIncorporarTodosBtn() {
+      if (!incorporarTodosBtn || !grid) return;
+      var cards = grid.querySelectorAll('.elementos-upload-card');
+      incorporarTodosBtn.style.display = cards.length > 0 ? 'flex' : 'none';
+    }
+
+    // Event listener para el botón "Incorporar Todos"
+    if (incorporarTodosBtn) {
+      incorporarTodosBtn.addEventListener('click', function() {
+        var cards = grid.querySelectorAll('.elementos-upload-card');
+        if (cards.length === 0) return;
+        
+        // Incorporar todos los elementos automáticamente
+        var confirmMsg = '¿Incorporar todos los ' + cards.length + ' elementos?';
+        if (!confirm(confirmMsg)) return;
+        
+        // Procesar cada tarjeta: guardar y eliminar con efecto
+        var incorporados = 0;
+        cards.forEach(function(card) {
+          var id = card.dataset.id;
+          var item = items[id];
+          if (!item) return;
+          
+          try {
+            // Crear un canvas temporal para este elemento con recorte de fondo
+            var img = item.img;
+            var MAXDIM = 900;
+            var scale = Math.min(1, MAXDIM / Math.max(img.naturalWidth, img.naturalHeight));
+            var w = Math.max(1, Math.round(img.naturalWidth * scale));
+            var h = Math.max(1, Math.round(img.naturalHeight * scale));
+            
+            var tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            var ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            // Aplicar recorte de fondo automático
+            removeBackground(ctx, w, h, item.tolerance || 32);
+            
+            var preview = tempCanvas.toDataURL('image/png');
+            
+            // Calcular dimensiones para 300 DPI usando imagen original
+            var anchoCm = (img.naturalWidth / 300) * 2.54;
+            var altoCm = (img.naturalHeight / 300) * 2.54;
+            
+            // Guardar elemento
+            var elementoGuardado = GestorElementos.guardar({
+              nombre: id || 'Elemento ' + (incorporados + 1),
+              preview: preview,
+              categoria: 'Elementos',
+              tolerance: item.tolerance || 32,
+              medidas: {
+                ancho: Math.round(anchoCm * 10) / 10,
+                alto: Math.round(altoCm * 10) / 10
+              }
+            });
+            
+            console.log('[Elemento Incorporado]', elementoGuardado.nombre);
+            incorporados++;
+            
+            // Eliminar tarjeta directamente
+            card.remove();
+            delete items[id];
+            updateIncorporarTodosBtn();
+          } catch (err) {
+            console.error('[Error al incorporar elemento]', id, err);
+          }
+        });
+        
+        if (incorporados > 0) {
+          alert('¡' + incorporados + ' elementos incorporados exitosamente!');
+        }
+      });
+    }
     var comicPaletteBtns = comicPalette ? comicPalette.querySelectorAll('.vcp-item') : [];
     var comicPaletteTarget = null; // <input type="color"> que va a recibir el valor elegido
     var firstDetectedColorInput = null; // <input> del primer color detectado, sincronizado con #vectorizeColorSwatchTrigger
@@ -3396,6 +3605,7 @@ function prepareCanvasFromImage(img) {
           '<button type="button" class="elementos-upload-remove" title="Quitar">×</button>';
         gridEl.appendChild(card);
         refreshHasImage(canvasWrapEl, gridEl);
+        updateIncorporarTodosBtn();
 
         card.querySelector('.elementos-upload-remove').addEventListener('click', function(e){
           e.stopPropagation();
@@ -3405,6 +3615,7 @@ function prepareCanvasFromImage(img) {
           delete items[id];
           delete pendingStarts[id];
           refreshHasImage(canvasWrapEl, gridEl);
+          updateIncorporarTodosBtn();
         });
 
         var reader = new FileReader();
@@ -4170,6 +4381,22 @@ function prepareCanvasFromImage(img) {
       if(window.__syncVectorizeBrushOverlay) window.__syncVectorizeBrushOverlay();
       if(window.__resetVectorizeZoom) window.__resetVectorizeZoom();
 
+      // ── Calcular y mostrar medidas recomendadas ──
+      var recommendedSizesEl = document.getElementById('vectorizeRecommendedSizes');
+      if(recommendedSizesEl && typeof ValidadorCalidadImpresion !== 'undefined'){
+        try {
+          // Calcular tamaño óptimo para 300 DPI
+          var anchoCm = (img.naturalWidth / 300) * 2.54;
+          var altoCm = (img.naturalHeight / 300) * 2.54;
+          
+          // Mostrar solo las medidas
+          recommendedSizesEl.textContent = anchoCm.toFixed(1) + ' × ' + altoCm.toFixed(1) + ' cm';
+        } catch(e){
+          console.warn('[openAdjustModal] Error calculando medidas:', e);
+          recommendedSizesEl.style.display = 'none';
+        }
+      }
+
       modalOverlay.classList.add('open');
       // vuelve a dibujar los cuadros de texto que ya tenía este elemento (si los tenía)
       renderModalTextboxes(id);
@@ -4279,15 +4506,12 @@ function prepareCanvasFromImage(img) {
             // Cerrar el modal primero
             closeAdjustModal();
             
-            // Luego aplicar efecto de desintegración a la tarjeta
+            // Eliminar la tarjeta directamente
             var card = item.cardEl;
-            if (card && typeof DesintegracionFX !== 'undefined') {
-              DesintegracionFX.desintegrarCard(card, function() {
-                console.log('[Elemento] Tarjeta desintegrada con efecto:', activeModalId);
-              });
-            } else {
-              // Si no hay efecto disponible, remover la tarjeta directamente
-              if (card) card.remove();
+            if (card) {
+              card.remove();
+              delete items[activeModalId];
+              updateIncorporarTodosBtn();
             }
           } else {
             closeAdjustModal();
