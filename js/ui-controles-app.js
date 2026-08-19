@@ -1,3 +1,71 @@
+  // Modal de confirmación para eliminar elementos
+  (function(){
+    // Crear el modal de confirmación si no existe
+    let confirmModal = document.getElementById('elementDeleteConfirmModal');
+    if (!confirmModal) {
+      confirmModal = document.createElement('div');
+      confirmModal.id = 'elementDeleteConfirmModal';
+      confirmModal.className = 'delete-confirm-overlay';
+      confirmModal.innerHTML =
+        '<div class="delete-confirm-modal">' +
+          '<div class="delete-confirm-icon">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<circle cx="12" cy="12" r="10"/>' +
+              '<line x1="12" y1="8" x2="12" y2="12"/>' +
+              '<line x1="12" y1="16" x2="12.01" y2="16"/>' +
+            '</svg>' +
+          '</div>' +
+          '<p class="delete-confirm-title">¿Eliminar este elemento?</p>' +
+          '<p class="delete-confirm-message"></p>' +
+          '<div class="delete-confirm-actions">' +
+            '<button type="button" class="delete-confirm-btn delete-confirm-btn--cancel">Cancelar</button>' +
+            '<button type="button" class="delete-confirm-btn delete-confirm-btn--delete">Eliminar</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(confirmModal);
+
+      // Cerrar al hacer clic en el fondo
+      confirmModal.addEventListener('click', function(e) {
+        if (e.target === confirmModal) {
+          confirmModal.classList.remove('open');
+        }
+      });
+    }
+
+    // Función global para mostrar el modal de confirmación
+    window.confirmarEliminacion = function(tipo, nombre, callback) {
+      const messageEl = confirmModal.querySelector('.delete-confirm-message');
+      const cancelBtn = confirmModal.querySelector('.delete-confirm-btn--cancel');
+      const deleteBtn = confirmModal.querySelector('.delete-confirm-btn--delete');
+
+      // Configurar el mensaje según el tipo
+      const tipoTexto = tipo === 'elemento' ? 'elemento' : 
+                        tipo === 'textura' ? 'textura' : 
+                        tipo === 'fuente' ? 'fuente' : 
+                        tipo === 'plantilla' ? 'plantilla' : tipo;
+      messageEl.textContent = 'Se eliminará "' + nombre + '" de forma permanente.';
+
+      // Limpiar eventos anteriores
+      const newCancelBtn = cancelBtn.cloneNode(true);
+      const newDeleteBtn = deleteBtn.cloneNode(true);
+      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+      deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+
+      // Agregar nuevos eventos
+      newCancelBtn.addEventListener('click', function() {
+        confirmModal.classList.remove('open');
+      });
+
+      newDeleteBtn.addEventListener('click', function() {
+        confirmModal.classList.remove('open');
+        if (callback) callback();
+      });
+
+      // Mostrar el modal
+      confirmModal.classList.add('open');
+    };
+  })();
+
   // Modal flotante: Elegir Diseño
   (function(){
     const openBtn = document.getElementById('chooseDesignBtn');
@@ -1483,14 +1551,18 @@
       }
       
       const texturas = GestorTexturas.listar();
+      console.log('[Texture Picker] Total texturas:', texturas.length);
+      console.log('[Texture Picker] activeSubcategory:', activeSubcategory);
       
       // Filtrar por subcategoría activa
-      const texturasFiltradasFiltered = texturas.filter(function(tex) {
+      const texturasFiltereds = texturas.filter(function(tex) {
         if (!activeSubcategory) return true;
         return tex.subcategoria === activeSubcategory;
       });
+      
+      console.log('[Texture Picker] Texturas filtradas:', texturasFiltereds.length, texturasFiltereds);
 
-      if (!texturasFiltradasFiltered.length){
+      if (!texturasFiltereds.length){
         const empty = document.createElement('div');
         empty.className = 'texture-picker-empty';
         empty.textContent = 'Todavía no cargaste texturas en esa categoría. Subilas desde la vista "Texturas".';
@@ -1498,7 +1570,7 @@
         return;
       }
 
-      texturasFiltradasFiltered.forEach(function(textura){
+      texturasFiltereds.forEach(function(textura){
         const thumb = document.createElement('div');
         thumb.className = 'texture-picker-thumb';
         thumb.style.backgroundImage = 'url("' + textura.preview + '")';
@@ -2236,7 +2308,7 @@
     var row = document.createElement('div');
     row.className = 'quantities-row';
     row.innerHTML =
-      '<span class="quantities-label">' + elemento.nombre + '</span>' +
+      '<span class="quantities-label" style="display: none;">' + elemento.nombre + '</span>' +
       '<label class="element-lock-toggle">' +
         '<input type="checkbox" value="">' +
         '<div class="element-lock-track">' +
@@ -2248,7 +2320,12 @@
           '</svg>' +
           '<div class="element-lock-thumb"></div>' +
         '</div>' +
-      '</label>';
+      '</label>' +
+      '<button type="button" class="element-delete-btn" aria-label="Eliminar elemento">' +
+        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M3 6h18M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2m3 0v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h14zM10 11v6m4-6v6"/>' +
+        '</svg>' +
+      '</button>';
 
     card.appendChild(topRow);
     card.appendChild(row);
@@ -2262,6 +2339,23 @@
         if (typeof applyElementsCategoryFilter === 'function') {
           applyElementsCategoryFilter();
         }
+      });
+    }
+    
+    // Agregar evento al botón de eliminar
+    var deleteBtn = row.querySelector('.element-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        confirmarEliminacion('elemento', elemento.nombre, function() {
+          if (typeof GestorElementos !== 'undefined' && GestorElementos.eliminar) {
+            GestorElementos.eliminar(elemento.id || elemento.nombre);
+            card.remove();
+            console.log('[crearTarjetaElementoGuardado] Elemento eliminado:', elemento.nombre);
+            // Disparar evento de actualización para refrescar otras vistas
+            window.dispatchEvent(new CustomEvent('superimprimible:elementos-updated'));
+          }
+        });
       });
     }
     
@@ -2448,7 +2542,7 @@
     var row = document.createElement('div');
     row.className = 'quantities-row';
     row.innerHTML =
-      '<span class="quantities-label">' + textura.nombre + '</span>' +
+      '<span class="quantities-label" style="display: none;">' + textura.nombre + '</span>' +
       '<label class="element-lock-toggle">' +
         '<input type="checkbox" value="">' +
         '<div class="element-lock-track">' +
@@ -2460,7 +2554,12 @@
           '</svg>' +
           '<div class="element-lock-thumb"></div>' +
         '</div>' +
-      '</label>';
+      '</label>' +
+      '<button type="button" class="element-delete-btn" aria-label="Eliminar textura">' +
+        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M3 6h18M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2m3 0v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h14zM10 11v6m4-6v6"/>' +
+        '</svg>' +
+      '</button>';
 
     card.appendChild(topRow);
     card.appendChild(row);
@@ -2474,6 +2573,23 @@
         if (typeof applyElementsCategoryFilter === 'function') {
           applyElementsCategoryFilter();
         }
+      });
+    }
+    
+    // Agregar evento al botón de eliminar
+    var deleteBtn = row.querySelector('.element-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        confirmarEliminacion('textura', textura.nombre, function() {
+          if (typeof GestorTexturas !== 'undefined' && GestorTexturas.eliminar) {
+            GestorTexturas.eliminar(textura.id || textura.nombre);
+            card.remove();
+            console.log('[crearTarjetaTexturaGuardada] Textura eliminada:', textura.nombre);
+            // Disparar evento de actualización para refrescar otras vistas
+            window.dispatchEvent(new CustomEvent('superimprimible:texturas-updated'));
+          }
+        });
       });
     }
     
@@ -2609,7 +2725,7 @@
     var row = document.createElement('div');
     row.className = 'quantities-row';
     row.innerHTML =
-      '<span class="quantities-label">' + fuente.nombre + '</span>' +
+      '<span class="quantities-label" style="display: none;">' + fuente.nombre + '</span>' +
       '<label class="element-lock-toggle">' +
         '<input type="checkbox" value="">' +
         '<div class="element-lock-track">' +
@@ -2621,7 +2737,12 @@
           '</svg>' +
           '<div class="element-lock-thumb"></div>' +
         '</div>' +
-      '</label>';
+      '</label>' +
+      '<button type="button" class="element-delete-btn" aria-label="Eliminar fuente">' +
+        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M3 6h18M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2m3 0v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h14zM10 11v6m4-6v6"/>' +
+        '</svg>' +
+      '</button>';
 
     card.appendChild(topRow);
     card.appendChild(row);
@@ -2635,6 +2756,23 @@
         if (typeof applyElementsCategoryFilter === 'function') {
           applyElementsCategoryFilter();
         }
+      });
+    }
+    
+    // Agregar evento al botón de eliminar
+    var deleteBtn = row.querySelector('.element-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        confirmarEliminacion('fuente', fuente.nombre, function() {
+          if (typeof GestorFuentes !== 'undefined' && GestorFuentes.eliminar) {
+            GestorFuentes.eliminar(fuente.id || fuente.nombre);
+            card.remove();
+            console.log('[crearTarjetaFuenteGuardada] Fuente eliminada:', fuente.nombre);
+            // Disparar evento de actualización para refrescar otras vistas
+            window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+          }
+        });
       });
     }
     
@@ -3889,3 +4027,1091 @@
       }, 900);
     });
   }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // SISTEMA DE STICKERS: Arrastrar elementos desde side-panel-2 al canvas
+  // ══════════════════════════════════════════════════════════════════════
+  (function() {
+    'use strict';
+    
+    console.log('[Stickers] Inicializando sistema de stickers...');
+    
+    const editorWrap = document.getElementById('editorWrap');
+    const editorCanvas = document.getElementById('editorCanvas');
+    
+    if (!editorWrap || !editorCanvas) {
+      console.warn('[Stickers] editorWrap o editorCanvas no encontrados');
+      return;
+    }
+    
+    // Array para almacenar todos los stickers activos
+    let stickers = [];
+    let stickerIdCounter = 0;
+    let activeSticker = null;
+    let isDragging = false;
+    let isResizing = false;
+    let isRotating = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let resizeStartDist = 0;
+    let resizeStartWidth = 0;
+    let resizeStartHeight = 0;
+    let rotateStartAngle = 0;
+    let rotateStartRotation = 0;
+    
+    // Crear capa de stickers sobre el canvas
+    const stickersLayer = document.createElement('div');
+    stickersLayer.id = 'stickersLayer';
+    stickersLayer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    `;
+    editorWrap.style.position = 'relative';
+    editorWrap.appendChild(stickersLayer);
+    
+    console.log('[Stickers] Capa de stickers creada');
+    
+    // Función auxiliar para calcular rotación de tono (hue) desde RGB
+    function getHueRotation(r, g, b) {
+      // Normalizar valores RGB a 0-1
+      r = r / 255;
+      g = g / 255;
+      b = b / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      
+      if (max !== min) {
+        const d = max - min;
+        switch (max) {
+          case r:
+            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            break;
+          case g:
+            h = ((b - r) / d + 2) / 6;
+            break;
+          case b:
+            h = ((r - g) / d + 4) / 6;
+            break;
+        }
+      }
+      
+      return Math.round(h * 360);
+    }
+    
+    // Función para crear un nuevo sticker
+    function createSticker(imageUrl, elementoId, elementoNombre) {
+      const stickerId = 'sticker-' + (stickerIdCounter++);
+      
+      // Obtener dimensiones del editorWrap para centrar el sticker
+      const wrapRect = editorWrap.getBoundingClientRect();
+      const initialSize = 150; // tamaño inicial en px
+      
+      const stickerData = {
+        id: stickerId,
+        elementoId: elementoId,
+        nombre: elementoNombre,
+        imageUrl: imageUrl,
+        x: (wrapRect.width / 2) - (initialSize / 2), // centrado
+        y: (wrapRect.height / 2) - (initialSize / 2),
+        width: initialSize,
+        height: initialSize,
+        rotation: 0,
+        zIndex: stickers.length + 1,
+        tintColor: '#e11d48' // color inicial
+      };
+      
+      stickers.push(stickerData);
+      renderSticker(stickerData);
+      
+      console.log('[Stickers] Sticker creado:', stickerId, elementoNombre);
+      return stickerData;
+    }
+    
+    // Función para renderizar un sticker en el DOM
+    function renderSticker(stickerData) {
+      // Verificar si ya existe
+      let stickerEl = document.getElementById(stickerData.id);
+      
+      if (!stickerEl) {
+        // Crear elemento del sticker
+        stickerEl = document.createElement('div');
+        stickerEl.id = stickerData.id;
+        stickerEl.className = 'canvas-sticker';
+        stickerEl.style.cssText = `
+          position: absolute;
+          pointer-events: auto;
+          cursor: move;
+          user-select: none;
+          border: 2px solid transparent;
+          box-sizing: border-box;
+          background-size: contain;
+          background-position: center;
+          background-repeat: no-repeat;
+        `;
+        
+        // Imagen del sticker
+        const img = document.createElement('img');
+        img.src = stickerData.imageUrl;
+        img.style.cssText = `
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          user-select: none;
+          -webkit-user-drag: none;
+        `;
+        stickerEl.appendChild(img);
+        
+        // Botón de eliminar (esquina inferior derecha) - Elemento independiente
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'sticker-control-btn sticker-delete-btn';
+        deleteBtn.innerHTML = '✕';
+        deleteBtn.title = 'Eliminar';
+        deleteBtn.style.cssText = `
+          display: flex;
+          position: absolute;
+          bottom: -12px;
+          right: -12px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #ff0000;
+          color: white;
+          border: 3px solid white;
+          cursor: pointer;
+          font-size: 14px;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          z-index: 20;
+          pointer-events: auto;
+        `;
+        deleteBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          deleteSticker(stickerData.id);
+        });
+        // Ocultar por defecto hasta que se seleccione el sticker
+        deleteBtn.style.display = 'none';
+        stickerEl.appendChild(deleteBtn);
+        
+        // Selector de color (esquina superior izquierda)
+        const colorControl = document.createElement('div');
+        colorControl.className = 'sticker-color-control';
+        colorControl.style.cssText = `
+          display: none;
+          position: absolute;
+          top: -12px;
+          left: -12px;
+        `;
+        
+        const colorBtn = document.createElement('button');
+        colorBtn.className = 'sticker-color-btn vcp-trigger';
+        colorBtn.type = 'button';
+        colorBtn.title = 'Cambiar color';
+        colorBtn.style.cssText = `
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
+          border: 2px solid white;
+          background: #fff;
+          padding: 3px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          transition: transform 0.12s ease;
+        `;
+        
+        const colorDot = document.createElement('span');
+        colorDot.className = 'sticker-color-dot vcp-trigger-dot';
+        colorDot.style.cssText = `
+          width: 100%;
+          height: 100%;
+          border-radius: 3px;
+          display: block;
+          background: ${stickerData.tintColor || '#e11d48'};
+        `;
+        
+        colorBtn.appendChild(colorDot);
+        colorControl.appendChild(colorBtn);
+        
+        // Crear paleta de colores estilo cómic
+        const palette = document.createElement('div');
+        palette.className = 'vcp-palette sticker-vcp-palette';
+        palette.id = 'stickerPalette-' + stickerData.id;
+        palette.style.cssText = `
+          position: fixed;
+          z-index: 500;
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition: opacity 0.15s ease, visibility 0.15s ease;
+          transform: none;
+        `;
+        
+        const palettePanel = document.createElement('div');
+        palettePanel.className = 'vcp-panel';
+        
+        const paletteItems = document.createElement('div');
+        paletteItems.className = 'vcp-items';
+        
+        // Colores de la paleta
+        const colors = [
+          '#e11d48', '#f472b6', '#fb923c', '#facc15', '#84cc16',
+          '#10b981', '#0ea5e9', '#3b82f6', '#8b5cf6', '#a78bfa'
+        ];
+        
+        colors.forEach(function(color) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'vcp-item';
+          btn.style.setProperty('--color', color);
+          btn.dataset.color = color;
+          btn.setAttribute('aria-color', color);
+          if (color === (stickerData.tintColor || '#e11d48')) {
+            btn.classList.add('selected');
+          }
+          paletteItems.appendChild(btn);
+        });
+        
+        palettePanel.appendChild(paletteItems);
+        palette.appendChild(palettePanel);
+        document.body.appendChild(palette); // Agregar al body en lugar de al colorControl
+        
+        // Lógica de la paleta
+        let paletteOpen = false;
+        let previewOriginal = null;
+        
+        function positionPalette() {
+          const rect = colorBtn.getBoundingClientRect();
+          const paletteHeight = palette.offsetHeight || 60; // altura aproximada de la paleta
+          // Posicionar la paleta justo arriba del botón, alineada a la izquierda
+          const x = rect.left;
+          const y = rect.top - paletteHeight - 6; // 6px de separación arriba
+          palette.style.setProperty('left', x + 'px', 'important');
+          palette.style.setProperty('top', y + 'px', 'important');
+          palette.style.setProperty('transform', 'none', 'important');
+        }
+        
+        function closePalette() {
+          palette.style.setProperty('opacity', '0', 'important');
+          palette.style.setProperty('visibility', 'hidden', 'important');
+          palette.style.setProperty('pointer-events', 'none', 'important');
+          palette.classList.remove('open');
+          paletteOpen = false;
+        }
+        
+        function openPalette() {
+          positionPalette();
+          palette.style.setProperty('opacity', '1', 'important');
+          palette.style.setProperty('visibility', 'visible', 'important');
+          palette.style.setProperty('pointer-events', 'auto', 'important');
+          palette.style.setProperty('transform', 'none', 'important');
+          palette.classList.add('open');
+          paletteOpen = true;
+          
+          // Actualizar selección
+          const currentColor = stickerData.tintColor || '#e11d48';
+          paletteItems.querySelectorAll('.vcp-item').forEach(function(btn) {
+            btn.classList.toggle('selected', btn.dataset.color === currentColor);
+          });
+        }
+        
+        function applyColorToSticker(color) {
+          colorDot.style.background = color;
+          stickerData.tintColor = color;
+          
+          // Aplicar filtro de color a la imagen
+          const img = stickerEl.querySelector('img');
+          if (img) {
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+            
+            img.style.filter = `
+              brightness(0.8)
+              sepia(1)
+              saturate(5)
+              hue-rotate(${getHueRotation(r, g, b)}deg)
+              brightness(1.1)
+            `;
+          }
+        }
+        
+        colorBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (paletteOpen) {
+            closePalette();
+          } else {
+            // Cerrar otras paletas abiertas
+            document.querySelectorAll('.sticker-vcp-palette.open').forEach(function(p) {
+              if (p !== palette) {
+                p.style.opacity = '0';
+                p.style.visibility = 'hidden';
+                p.style.pointerEvents = 'none';
+                p.classList.remove('open');
+              }
+            });
+            openPalette();
+          }
+        });
+        
+        // Event listeners para los botones de color
+        paletteItems.querySelectorAll('.vcp-item').forEach(function(btn) {
+          btn.addEventListener('mouseenter', function() {
+            if (previewOriginal === null) {
+              previewOriginal = stickerData.tintColor || '#e11d48';
+            }
+            applyColorToSticker(btn.dataset.color);
+          });
+          
+          btn.addEventListener('mouseleave', function() {
+            if (previewOriginal !== null) {
+              applyColorToSticker(previewOriginal);
+              previewOriginal = null;
+            }
+          });
+          
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            previewOriginal = null;
+            applyColorToSticker(btn.dataset.color);
+            closePalette();
+          });
+        });
+        
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', function(e) {
+          if (!paletteOpen) return;
+          if (palette.contains(e.target)) return;
+          if (colorBtn.contains(e.target)) return;
+          closePalette();
+          if (previewOriginal !== null) {
+            applyColorToSticker(previewOriginal);
+            previewOriginal = null;
+          }
+        });
+        
+        stickerEl.appendChild(colorControl);
+        
+        // Handle de rotación (esquina superior derecha)
+        const rotateHandle = document.createElement('div');
+        rotateHandle.className = 'sticker-rotate-handle';
+        rotateHandle.style.cssText = `
+          display: none;
+          position: absolute;
+          top: -12px;
+          right: -12px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #4CAF50;
+          border: 2px solid white;
+          cursor: grab;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+        rotateHandle.innerHTML = '↻';
+        rotateHandle.style.display = 'flex';
+        rotateHandle.style.alignItems = 'center';
+        rotateHandle.style.justifyContent = 'center';
+        rotateHandle.style.color = 'white';
+        rotateHandle.style.fontSize = '16px';
+        rotateHandle.style.fontWeight = 'bold';
+        stickerEl.appendChild(rotateHandle);
+        
+        // Handle de redimensionar (esquina inferior izquierda)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'sticker-resize-handle';
+        resizeHandle.style.cssText = `
+          display: none;
+          position: absolute;
+          bottom: -12px;
+          left: -12px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #2196F3;
+          border: 2px solid white;
+          cursor: nwse-resize;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+        resizeHandle.innerHTML = '⇔';
+        resizeHandle.style.display = 'flex';
+        resizeHandle.style.alignItems = 'center';
+        resizeHandle.style.justifyContent = 'center';
+        resizeHandle.style.color = 'white';
+        resizeHandle.style.fontSize = '14px';
+        resizeHandle.style.fontWeight = 'bold';
+        stickerEl.appendChild(resizeHandle);
+        
+        // Event listeners para interacción
+        stickerEl.addEventListener('mousedown', handleStickerMouseDown);
+        resizeHandle.addEventListener('mousedown', handleResizeStart);
+        rotateHandle.addEventListener('mousedown', handleRotateStart);
+        
+        stickersLayer.appendChild(stickerEl);
+      }
+      
+      // Actualizar posición, tamaño y rotación
+      stickerEl.style.left = stickerData.x + 'px';
+      stickerEl.style.top = stickerData.y + 'px';
+      stickerEl.style.width = stickerData.width + 'px';
+      stickerEl.style.height = stickerData.height + 'px';
+      stickerEl.style.transform = 'rotate(' + stickerData.rotation + 'deg)';
+      stickerEl.style.zIndex = stickerData.zIndex;
+    }
+    
+    // Función para seleccionar un sticker
+    function selectSticker(stickerId) {
+      // Deseleccionar todos
+      document.querySelectorAll('.canvas-sticker').forEach(function(el) {
+        el.style.border = '2px solid transparent';
+        const deleteBtn = el.querySelector('.sticker-delete-btn');
+        const rotateHandle = el.querySelector('.sticker-rotate-handle');
+        const resizeHandle = el.querySelector('.sticker-resize-handle');
+        const colorControl = el.querySelector('.sticker-color-control');
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        if (rotateHandle) rotateHandle.style.display = 'none';
+        if (resizeHandle) resizeHandle.style.display = 'none';
+        if (colorControl) colorControl.style.display = 'none';
+      });
+      
+      // Seleccionar el nuevo
+      const stickerEl = document.getElementById(stickerId);
+      if (stickerEl) {
+        stickerEl.style.border = '2px solid #2196F3';
+        const deleteBtn = stickerEl.querySelector('.sticker-delete-btn');
+        const rotateHandle = stickerEl.querySelector('.sticker-rotate-handle');
+        const resizeHandle = stickerEl.querySelector('.sticker-resize-handle');
+        const colorControl = stickerEl.querySelector('.sticker-color-control');
+        
+        console.log('[Stickers] deleteBtn encontrado:', deleteBtn);
+        
+        if (deleteBtn) {
+          deleteBtn.style.display = 'flex';
+          console.log('[Stickers] deleteBtn display establecido a flex');
+        }
+        if (rotateHandle) rotateHandle.style.display = 'flex';
+        if (resizeHandle) resizeHandle.style.display = 'flex';
+        if (colorControl) colorControl.style.display = 'block';
+      }
+      
+      activeSticker = stickers.find(function(s) { return s.id === stickerId; });
+      console.log('[Stickers] Sticker seleccionado:', stickerId);
+    }
+    
+    // Función para deseleccionar todos los stickers
+    function deselectAllStickers() {
+      document.querySelectorAll('.canvas-sticker').forEach(function(el) {
+        el.style.border = '2px solid transparent';
+        const deleteBtn = el.querySelector('.sticker-delete-btn');
+        const rotateHandle = el.querySelector('.sticker-rotate-handle');
+        const resizeHandle = el.querySelector('.sticker-resize-handle');
+        const colorControl = el.querySelector('.sticker-color-control');
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        if (rotateHandle) rotateHandle.style.display = 'none';
+        if (resizeHandle) resizeHandle.style.display = 'none';
+        if (colorControl) colorControl.style.display = 'none';
+      });
+      activeSticker = null;
+    }
+    
+    // Función para eliminar un sticker
+    function deleteSticker(stickerId) {
+      const stickerEl = document.getElementById(stickerId);
+      if (stickerEl) {
+        stickerEl.remove();
+      }
+      stickers = stickers.filter(function(s) { return s.id !== stickerId; });
+      if (activeSticker && activeSticker.id === stickerId) {
+        activeSticker = null;
+      }
+      console.log('[Stickers] Sticker eliminado:', stickerId);
+    }
+    
+    // Handlers de mouse para arrastre
+    function handleStickerMouseDown(e) {
+      if (e.target.classList.contains('sticker-control-btn')) return;
+      if (e.target.classList.contains('sticker-resize-handle')) return;
+      if (e.target.classList.contains('sticker-rotate-handle')) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const stickerId = e.currentTarget.id;
+      selectSticker(stickerId);
+      
+      if (activeSticker) {
+        isDragging = true;
+        dragStartX = e.clientX - activeSticker.x;
+        dragStartY = e.clientY - activeSticker.y;
+        document.body.style.cursor = 'move';
+      }
+    }
+    
+    // Handler para inicio de redimensionado
+    function handleResizeStart(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (!activeSticker) return;
+      
+      isResizing = true;
+      const centerX = activeSticker.x + activeSticker.width / 2;
+      const centerY = activeSticker.y + activeSticker.height / 2;
+      resizeStartDist = Math.sqrt(
+        Math.pow(e.clientX - centerX, 2) + 
+        Math.pow(e.clientY - centerY, 2)
+      );
+      resizeStartWidth = activeSticker.width;
+      resizeStartHeight = activeSticker.height;
+      document.body.style.cursor = 'nwse-resize';
+    }
+    
+    // Handler para inicio de rotación
+    function handleRotateStart(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (!activeSticker) return;
+      
+      isRotating = true;
+      const centerX = activeSticker.x + activeSticker.width / 2;
+      const centerY = activeSticker.y + activeSticker.height / 2;
+      rotateStartAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+      rotateStartRotation = activeSticker.rotation;
+      document.body.style.cursor = 'grab';
+    }
+    
+    // Handler global de movimiento del mouse
+    document.addEventListener('mousemove', function(e) {
+      if (isDragging && activeSticker) {
+        activeSticker.x = e.clientX - dragStartX;
+        activeSticker.y = e.clientY - dragStartY;
+        renderSticker(activeSticker);
+      } else if (isResizing && activeSticker) {
+        const centerX = activeSticker.x + activeSticker.width / 2;
+        const centerY = activeSticker.y + activeSticker.height / 2;
+        const currentDist = Math.sqrt(
+          Math.pow(e.clientX - centerX, 2) + 
+          Math.pow(e.clientY - centerY, 2)
+        );
+        const scale = currentDist / resizeStartDist;
+        const newWidth = resizeStartWidth * scale;
+        const newHeight = resizeStartHeight * scale;
+        
+        // Mantener centrado mientras se redimensiona
+        activeSticker.x = centerX - newWidth / 2;
+        activeSticker.y = centerY - newHeight / 2;
+        activeSticker.width = newWidth;
+        activeSticker.height = newHeight;
+        renderSticker(activeSticker);
+      } else if (isRotating && activeSticker) {
+        const centerX = activeSticker.x + activeSticker.width / 2;
+        const centerY = activeSticker.y + activeSticker.height / 2;
+        const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+        const angleDiff = currentAngle - rotateStartAngle;
+        activeSticker.rotation = rotateStartRotation + angleDiff;
+        renderSticker(activeSticker);
+      }
+    });
+    
+    // Handler global de soltar el mouse
+    document.addEventListener('mouseup', function() {
+      if (isDragging || isResizing || isRotating) {
+        isDragging = false;
+        isResizing = false;
+        isRotating = false;
+        document.body.style.cursor = '';
+      }
+    });
+    
+    // Deseleccionar al hacer clic fuera
+    editorWrap.addEventListener('click', function(e) {
+      if (e.target === editorWrap || e.target === editorCanvas || e.target === stickersLayer) {
+        deselectAllStickers();
+      }
+    });
+    
+    // ══════════════════════════════════════════════════════════════════════
+    // DRAG & DROP desde side-panel-2 elementos
+    // ══════════════════════════════════════════════════════════════════════
+    
+    function enableDragForElements() {
+      // Hacer que todos los elementos en side-panel-2 sean arrastrables
+      for (let i = 1; i <= 24; i++) {
+        const square = document.getElementById('sp2Elemento' + i);
+        if (!square) continue;
+        
+        // Verificar si tiene un elemento cargado
+        if (square.classList.contains('has-element')) {
+          square.draggable = true;
+          square.style.cursor = 'grab';
+          
+          square.addEventListener('dragstart', function(e) {
+            const elementoId = square.getAttribute('data-elemento-id');
+            const elementoNombre = square.getAttribute('data-elemento-nombre');
+            const imageUrl = square.style.backgroundImage.match(/url\("(.+)"\)/)?.[1];
+            
+            if (imageUrl) {
+              e.dataTransfer.effectAllowed = 'copy';
+              e.dataTransfer.setData('text/plain', JSON.stringify({
+                elementoId: elementoId,
+                elementoNombre: elementoNombre,
+                imageUrl: imageUrl
+              }));
+              
+              square.style.opacity = '0.5';
+              console.log('[Stickers] Drag iniciado:', elementoNombre);
+            }
+          });
+          
+          square.addEventListener('dragend', function() {
+            square.style.opacity = '';
+          });
+        } else {
+          square.draggable = false;
+          square.style.cursor = '';
+        }
+      }
+    }
+    
+    // Habilitar drop en el editorWrap
+    editorWrap.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      editorWrap.style.outline = '2px dashed #2196F3';
+    });
+    
+    editorWrap.addEventListener('dragleave', function() {
+      editorWrap.style.outline = '';
+    });
+    
+    editorWrap.addEventListener('drop', function(e) {
+      e.preventDefault();
+      editorWrap.style.outline = '';
+      
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        
+        if (data.imageUrl) {
+          // Crear sticker en la posición donde se soltó
+          const wrapRect = editorWrap.getBoundingClientRect();
+          const dropX = e.clientX - wrapRect.left;
+          const dropY = e.clientY - wrapRect.top;
+          
+          const sticker = createSticker(data.imageUrl, data.elementoId, data.elementoNombre);
+          
+          // Ajustar posición al punto de drop
+          sticker.x = dropX - sticker.width / 2;
+          sticker.y = dropY - sticker.height / 2;
+          renderSticker(sticker);
+          selectSticker(sticker.id);
+          
+          console.log('[Stickers] Elemento soltado en canvas:', data.elementoNombre);
+        }
+      } catch (err) {
+        console.error('[Stickers] Error al procesar drop:', err);
+      }
+    });
+    
+    // Habilitar drag cuando se carguen elementos
+    window.addEventListener('superimprimible:elementos-updated', function() {
+      setTimeout(enableDragForElements, 100);
+    });
+    
+    // Habilitar drag inicial
+    enableDragForElements();
+    
+    console.log('[Stickers] Sistema de stickers inicializado correctamente');
+    
+    // Exponer funciones globalmente para debug
+    window.__stickers = {
+      createSticker: createSticker,
+      deleteSticker: deleteSticker,
+      getAll: function() { return stickers; }
+    };
+  })();
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Botón "Incorporar" de Temáticas
+  // ══════════════════════════════════════════════════════════════════════
+  (function(){
+    const incorporarBtn = document.getElementById('tematicasIncorporarBtn');
+    const nombreInput = document.getElementById('tematicasNombreInput');
+    const colorInput = document.getElementById('tematicasColorPickerInput');
+    const fontChooseBtn = document.getElementById('tematicasFontChooseBtn');
+    const textureCircle = document.getElementById('tematicasTextureCircle');
+    const personajesCards = document.getElementById('tematicasPersonajesCards');
+    const fondosCards = document.getElementById('tematicasFondosCards');
+    const elementsGrid = document.getElementById('elements-grid');
+
+    if (!incorporarBtn || !nombreInput || !elementsGrid) return;
+
+    // Función para mostrar notificación temporal
+    function showNotification(message, type){
+      const notification = document.createElement('div');
+      notification.className = 'tematica-notification tematica-notification--' + (type || 'success');
+      notification.textContent = message;
+      notification.style.cssText = 'position:fixed;top:20px;right:20px;padding:16px 24px;background:#10b981;color:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:14px;font-weight:500;animation:slideInRight 0.3s ease;';
+      
+      if (type === 'error'){
+        notification.style.background = '#ef4444';
+      }
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(function(){
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(function(){ notification.remove(); }, 300);
+      }, 3000);
+    }
+
+    // Función para validar todos los campos
+    function validarCampos(){
+      const errors = [];
+      
+      // 1. Validar nombre
+      const nombre = nombreInput.value.trim();
+      if (!nombre){
+        errors.push('El nombre de la temática es obligatorio');
+      }
+      
+      // 2. Validar fuente seleccionada
+      const fuenteSeleccionada = fontChooseBtn.dataset.selectedFont;
+      if (!fuenteSeleccionada){
+        errors.push('Debes elegir una fuente');
+      }
+      
+      // 3. Validar textura/color
+      const texturaSeleccionada = textureCircle && textureCircle.dataset.selectedTexture;
+      const colorSeleccionado = colorInput ? colorInput.value : null;
+      if (!texturaSeleccionada && !colorSeleccionado){
+        errors.push('Debes elegir una textura o color');
+      }
+      
+      // 4. Validar personajes
+      const numPersonajes = personajesCards ? personajesCards.children.length : 0;
+      console.log('[Temáticas] Validación personajes:', numPersonajes, personajesCards);
+      if (numPersonajes === 0){
+        errors.push('Debes agregar al menos un personaje');
+      }
+      
+      // 5. Validar fondos
+      const numFondos = fondosCards ? fondosCards.children.length : 0;
+      console.log('[Temáticas] Validación fondos:', numFondos, fondosCards);
+      console.log('[Temáticas] Contenido de fondosCards:', fondosCards ? fondosCards.innerHTML : 'null');
+      if (numFondos === 0){
+        errors.push('Debes agregar al menos un fondo');
+      }
+      
+      return errors;
+    }
+
+    // Función para recopilar datos de la temática
+    function recopilarDatos(){
+      const nombre = nombreInput.value.trim();
+      const fuente = fontChooseBtn.dataset.selectedFont || '';
+      const textura = (textureCircle && textureCircle.dataset.selectedTexture) || '';
+      const color = colorInput ? colorInput.value : '#5b9dff';
+      
+      // Recopilar personajes
+      const personajes = [];
+      if (personajesCards){
+        personajesCards.querySelectorAll('.sp2-personajes-card').forEach(function(card){
+          const img = card.querySelector('img');
+          if (img && img.src){
+            personajes.push({
+              src: img.src,
+              name: card.dataset.name || 'Personaje'
+            });
+          }
+        });
+      }
+      
+      // Recopilar fondos
+      const fondos = [];
+      if (fondosCards){
+        fondosCards.querySelectorAll('.sp2-personajes-card').forEach(function(card){
+          const img = card.querySelector('img');
+          if (img && img.src){
+            fondos.push({
+              src: img.src,
+              name: card.dataset.name || 'Fondo'
+            });
+          }
+        });
+      }
+      
+      return {
+        nombre: nombre,
+        fuente: fuente,
+        textura: textura,
+        color: color,
+        personajes: personajes,
+        fondos: fondos,
+        fechaCreacion: new Date().toISOString()
+      };
+    }
+
+    // Función para crear tarjeta en Marketing > Diseños
+    function crearTarjetaEnMarketing(tematica){
+      // Verificar si ya existe una tarjeta con este nombre en Diseños
+      const existingCard = elementsGrid.querySelector('.element-card[data-name="' + CSS.escape(tematica.nombre) + '"][data-marketing-category="Diseños"]');
+      if (existingCard){
+        showNotification('Ya existe una temática con ese nombre en Diseños', 'error');
+        return false;
+      }
+      
+      // Crear la tarjeta
+      const card = document.createElement('div');
+      card.className = 'element-card';
+      card.dataset.name = tematica.nombre;
+      card.dataset.category = 'Temática';
+      card.dataset.marketingCategory = 'Diseños';
+      card.dataset.tematicaId = tematica.id || '';
+      card.dataset.tematicaData = JSON.stringify(tematica);
+      
+      // Usar el primer personaje como imagen de preview
+      const previewImage = tematica.personajes.length > 0 ? tematica.personajes[0].src : '';
+      
+      const topRow = document.createElement('div');
+      topRow.className = 'element-top-row';
+      topRow.innerHTML =
+        '<div class="element-name-col">' +
+          '<span class="element-name-text" title="' + tematica.nombre + '">' + tematica.nombre + '</span>' +
+        '</div>' +
+        '<div class="element-category-col">' +
+          '<span class="element-category-badge">Temática</span>' +
+        '</div>' +
+        '<div class="element-meta-col">' +
+          '<span class="element-meta-item">Fuente: ' + tematica.fuente + '</span>' +
+          '<span class="element-meta-item">' + tematica.personajes.length + ' personajes</span>' +
+          '<span class="element-meta-item">' + tematica.fondos.length + ' fondos</span>' +
+        '</div>' +
+        '<div class="element-actions-col">' +
+          '<div class="stepper">' +
+            '<button type="button" class="stepper-btn stepper-minus" aria-label="Disminuir">−</button>' +
+            '<span class="stepper-value qty-value">0</span>' +
+            '<button type="button" class="stepper-btn stepper-plus" aria-label="Aumentar">+</button>' +
+          '</div>' +
+        '</div>';
+      
+      const square = document.createElement('div');
+      square.className = 'element-square';
+      square.style.backgroundImage = 'url(\'' + previewImage + '\')';
+      square.style.backgroundSize = 'cover';
+      square.style.backgroundPosition = 'center';
+      square.style.backgroundColor = tematica.color;
+      
+      // Crear row con botón de eliminar (similar a las otras tarjetas)
+      const row = document.createElement('div');
+      row.className = 'quantities-row';
+      row.innerHTML =
+        '<span class="quantities-label" style="display: none;">' + tematica.nombre + '</span>' +
+        '<label class="element-lock-toggle">' +
+          '<input type="checkbox" value="">' +
+          '<div class="element-lock-track">' +
+            '<svg class="element-lock-icon open" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>' +
+            '</svg>' +
+            '<svg class="element-lock-icon closed" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+              '<path fill-rule="evenodd" d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z"></path>' +
+            '</svg>' +
+            '<div class="element-lock-thumb"></div>' +
+          '</div>' +
+        '</label>' +
+        '<button type="button" class="element-delete-btn" aria-label="Eliminar temática">' +
+          '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M3 6h18M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2m3 0v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h14zM10 11v6m4-6v6"/>' +
+          '</svg>' +
+        '</button>';
+      
+      card.appendChild(topRow);
+      card.appendChild(square);
+      card.appendChild(row);
+      
+      // Agregar evento al botón de eliminar
+      const deleteBtn = row.querySelector('.element-delete-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          confirmarEliminacion('temática', tematica.nombre, function() {
+            // Eliminar de localStorage
+            try {
+              const tematicasGuardadas = JSON.parse(localStorage.getItem('tematicas') || '[]');
+              const filtered = tematicasGuardadas.filter(function(t) {
+                return t.id !== tematica.id;
+              });
+              localStorage.setItem('tematicas', JSON.stringify(filtered));
+              console.log('[Temáticas] Temática eliminada:', tematica.nombre);
+              // Emitir evento
+              window.dispatchEvent(new CustomEvent('superimprimible:tematicas-updated'));
+            } catch (err) {
+              console.error('[Temáticas] Error al eliminar:', err);
+            }
+            // Remover tarjeta del DOM
+            card.remove();
+          });
+        });
+      }
+      
+      // Insertar al principio del grid
+      elementsGrid.insertBefore(card, elementsGrid.firstChild);
+      
+      return true;
+    }
+
+    // Función para limpiar el formulario
+    function limpiarFormulario(){
+      nombreInput.value = '';
+      if (colorInput) colorInput.value = '#5b9dff';
+      if (fontChooseBtn) delete fontChooseBtn.dataset.selectedFont;
+      if (textureCircle){
+        delete textureCircle.dataset.selectedTexture;
+        textureCircle.style.backgroundImage = '';
+      }
+      
+      // Limpiar personajes
+      if (personajesCards){
+        personajesCards.innerHTML = '';
+      }
+      
+      // Limpiar fondos
+      if (fondosCards){
+        fondosCards.innerHTML = '';
+      }
+      
+      // Mostrar hints
+      const personajesHint = document.getElementById('tematicasPersonajesHint');
+      const fondosHint = document.getElementById('tematicasFondosHint');
+      if (personajesHint) personajesHint.style.display = '';
+      if (fondosHint) fondosHint.style.display = '';
+    }
+
+    // Función para guardar en localStorage
+    function guardarEnStorage(tematica){
+      try {
+        const tematicasGuardadas = JSON.parse(localStorage.getItem('tematicas') || '[]');
+        
+        // Buscar si ya existe una temática con el mismo nombre (upsert)
+        const nombreLower = tematica.nombre.toLowerCase();
+        const existingIndex = tematicasGuardadas.findIndex(function(t) {
+          return t.nombre.toLowerCase() === nombreLower;
+        });
+        
+        if (existingIndex !== -1) {
+          // Actualizar existente: preservar id y fechaCreacion, incrementar version
+          const existing = tematicasGuardadas[existingIndex];
+          tematica.id = existing.id;
+          tematica.fechaCreacion = existing.fechaCreacion;
+          tematica.version = (existing.version || 1) + 1;
+          tematicasGuardadas[existingIndex] = tematica;
+          console.log('[Temáticas] Actualizada en localStorage:', tematica);
+        } else {
+          // Crear nueva: agregar id, fechaCreacion y version
+          tematica.id = 'tematica_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+          tematica.fechaCreacion = new Date().toISOString();
+          tematica.version = 1;
+          tematicasGuardadas.push(tematica);
+          console.log('[Temáticas] Guardada en localStorage:', tematica);
+        }
+        
+        localStorage.setItem('tematicas', JSON.stringify(tematicasGuardadas));
+        
+        // Emitir evento de actualización
+        window.dispatchEvent(new CustomEvent('superimprimible:tematicas-updated'));
+      } catch (e){
+        console.error('[Temáticas] Error al guardar en localStorage:', e);
+      }
+    }
+
+    // Event listener del botón Incorporar
+    incorporarBtn.addEventListener('click', function(){
+      console.log('[Temáticas] Click en botón Incorporar');
+      
+      // 1. Validar campos
+      const errores = validarCampos();
+      if (errores.length > 0){
+        console.log('[Temáticas] Errores de validación:', errores);
+        showNotification(errores[0], 'error');
+        return;
+      }
+      
+      // 2. Recopilar datos
+      const tematica = recopilarDatos();
+      console.log('[Temáticas] Datos recopilados:', tematica);
+      
+      // 3. Crear tarjeta en Marketing
+      const creada = crearTarjetaEnMarketing(tematica);
+      if (!creada) return;
+      
+      // 4. Guardar en localStorage
+      guardarEnStorage(tematica);
+      
+      // 5. Mostrar notificación de éxito
+      showNotification('¡Temática "' + tematica.nombre + '" incorporada exitosamente!', 'success');
+      
+      // 6. Limpiar formulario
+      limpiarFormulario();
+      
+      // 7. Actualizar filtros de Marketing
+      const categoryToolbar = document.querySelector('#view-marketing .category-toolbar');
+      if (categoryToolbar){
+        const disenosBtn = Array.prototype.find.call(
+          categoryToolbar.querySelectorAll('.category-btn'),
+          function(btn){ return btn.textContent.trim() === 'Diseños'; }
+        );
+        if (disenosBtn){
+          // Trigger click event para actualizar la vista
+          setTimeout(function(){ disenosBtn.click(); }, 100);
+        }
+      }
+    });
+    
+    // Función para cargar temáticas guardadas desde localStorage
+    function cargarTematicasGuardadas(){
+      console.log('[Temáticas] Cargando temáticas guardadas...');
+      try {
+        const tematicasGuardadas = JSON.parse(localStorage.getItem('tematicas') || '[]');
+        console.log('[Temáticas] Temáticas en localStorage:', tematicasGuardadas);
+        
+        if (!tematicasGuardadas || tematicasGuardadas.length === 0) {
+          console.log('[Temáticas] No hay temáticas guardadas');
+          return;
+        }
+        
+        tematicasGuardadas.forEach(function(tematica) {
+          // Verificar si ya existe una tarjeta con este nombre en Diseños
+          const existingCard = elementsGrid.querySelector('.element-card[data-name="' + CSS.escape(tematica.nombre) + '"][data-marketing-category="Diseños"]');
+          if (!existingCard) {
+            // Crear tarjeta si no existe
+            crearTarjetaEnMarketing(tematica);
+          }
+        });
+        
+        console.log('[Temáticas] Temáticas cargadas exitosamente');
+      } catch (e) {
+        console.error('[Temáticas] Error al cargar temáticas:', e);
+      }
+    }
+    
+    // Cargar temáticas guardadas al iniciar
+    cargarTematicasGuardadas();
+    
+    // Escuchar evento de actualización para recargar
+    window.addEventListener('superimprimible:tematicas-updated', function() {
+      console.log('[Temáticas] Recargando temáticas guardadas...');
+      cargarTematicasGuardadas();
+    });
+    
+    console.log('[Temáticas] Módulo Incorporar inicializado');
+  })();

@@ -3441,6 +3441,122 @@
   }
   .element-lock-toggle:hover{ --etg-sc:.95; }
 
+  /* Botón de eliminar elemento */
+  .element-delete-btn{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:17px;
+    height:17px;
+    background:#ef4444;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+    transition:all .2s;
+    flex-shrink:0;
+    margin-left:6px;
+  }
+  .element-delete-btn:hover{
+    background:#dc2626;
+    transform:scale(1.1);
+  }
+  .element-delete-btn:active{
+    transform:scale(0.9);
+  }
+  .element-delete-btn svg{
+    width:10px;
+    height:10px;
+    fill:#ffffff;
+  }
+
+  /* Modal de confirmación para eliminar */
+  .delete-confirm-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10000;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s;
+  }
+  .delete-confirm-overlay.open{
+    opacity:1;
+    pointer-events:all;
+  }
+  .delete-confirm-modal{
+    background:#ffffff;
+    border-radius:12px;
+    padding:24px;
+    max-width:400px;
+    width:90%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    transform:scale(0.9);
+    transition:transform .3s;
+  }
+  .delete-confirm-overlay.open .delete-confirm-modal{
+    transform:scale(1);
+  }
+  .delete-confirm-icon{
+    width:48px;
+    height:48px;
+    margin:0 auto 16px;
+    border-radius:50%;
+    background:#fef2f2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .delete-confirm-icon svg{
+    width:28px;
+    height:28px;
+    stroke:#ef4444;
+  }
+  .delete-confirm-title{
+    font-size:20px;
+    font-weight:600;
+    color:#111827;
+    text-align:center;
+    margin:0 0 8px 0;
+  }
+  .delete-confirm-message{
+    font-size:14px;
+    color:#6b7280;
+    text-align:center;
+    margin:0 0 24px 0;
+  }
+  .delete-confirm-actions{
+    display:flex;
+    gap:12px;
+  }
+  .delete-confirm-btn{
+    flex:1;
+    padding:10px 16px;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .delete-confirm-btn--cancel{
+    background:#f3f4f6;
+    color:#374151;
+  }
+  .delete-confirm-btn--cancel:hover{
+    background:#e5e7eb;
+  }
+  .delete-confirm-btn--delete{
+    background:#ef4444;
+    color:#ffffff;
+  }
+  .delete-confirm-btn--delete:hover{
+    background:#dc2626;
+  }
+
   .thumb-grid{
     display:grid;
     grid-template-columns:repeat(5, 1fr);
@@ -10136,4 +10252,279 @@ body:not(.is-view-diseno) #floating-panel{
   width:12px;
   height:12px;
   pointer-events:none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SISTEMA DE STICKERS - Elementos arrastrables en el canvas
+   ═══════════════════════════════════════════════════════════════════════ */
+
+#stickersLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.canvas-sticker {
+  position: absolute;
+  pointer-events: auto;
+  cursor: move;
+  user-select: none;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  overflow: visible;
+}
+
+.canvas-sticker:hover {
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+.canvas-sticker.selected {
+  border-color: #2196F3;
+}
+
+.canvas-sticker img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.sticker-controls {
+  display: none;
+  position: absolute;
+  bottom: -12px;
+  right: -12px;
+  gap: 4px;
+  flex-direction: row;
+}
+
+.sticker-control-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+  font-weight: bold;
+}
+
+.sticker-control-btn:hover {
+  transform: scale(1.1);
+}
+
+.sticker-control-btn:active {
+  transform: scale(0.95);
+}
+
+.sticker-delete-btn {
+  background: #ff4444;
+  color: white;
+}
+
+.sticker-delete-btn:hover {
+  background: #ff0000;
+}
+
+.sticker-rotate-handle,
+.sticker-resize-handle {
+  display: none;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.sticker-rotate-handle {
+  top: -12px;
+  right: -12px;
+  background: #4CAF50;
+  cursor: grab;
+  font-size: 16px;
+}
+
+.sticker-rotate-handle:hover {
+  background: #45a049;
+  transform: scale(1.1);
+}
+
+.sticker-rotate-handle:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.sticker-resize-handle {
+  bottom: -12px;
+  left: -12px;
+  background: #2196F3;
+  cursor: nwse-resize;
+  font-size: 14px;
+}
+
+.sticker-resize-handle:hover {
+  background: #1976D2;
+  transform: scale(1.1);
+}
+
+.sticker-resize-handle:active {
+  transform: scale(0.95);
+}
+
+.sticker-resize-handle:active {
+  transform: scale(0.95);
+}
+
+/* Selector de color del sticker (esquina superior izquierda) */
+.sticker-color-control {
+  display: none;
+  position: absolute;
+  top: -12px;
+  left: -12px;
+}
+
+.sticker-color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid white;
+  background: #fff;
+  padding: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.12s ease;
+}
+
+.sticker-color-btn:hover {
+  transform: scale(1.1) translateY(-1px);
+}
+
+.sticker-color-btn:active {
+  transform: scale(0.95) translateY(0.5px);
+}
+
+.sticker-color-dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  display: block;
+  background: #e11d48;
+  transition: background 0.2s ease;
+}
+
+/* Paleta de colores del sticker - Override de estilos por defecto */
+.sticker-vcp-palette {
+  position: fixed !important;
+  z-index: 500 !important;
+  transform: none !important;
+  left: 0 !important;
+  top: 0 !important;
+}
+
+.sticker-vcp-palette.open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
+}
+
+/* Indicador visual de drop zone activo */
+#editorWrap[data-drag-active="true"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(33, 150, 243, 0.1);
+  border: 2px dashed #2196F3;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Mejorar cursor de elementos arrastrables en side-panel-2 */
+.elements-square.has-element[draggable="true"] {
+  cursor: grab;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.elements-square.has-element[draggable="true"]:hover {
+  transform: scale(1.05);
+}
+
+.elements-square.has-element[draggable="true"]:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Notificaciones de Temáticas
+   ══════════════════════════════════════════════════════════════════════ */
+
+.tematica-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  background: #10b981;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideInRight 0.3s ease;
+  max-width: 400px;
+}
+
+.tematica-notification--error {
+  background: #ef4444 !important;
+}
+
+.tematica-notification--success {
+  background: #10b981 !important;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
