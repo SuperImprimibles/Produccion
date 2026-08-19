@@ -1631,8 +1631,32 @@
       // Guardar referencia a la fuente seleccionada
       activeTriggerEl.dataset.selectedFont = fuente.id;
       activeTriggerEl.dataset.selectedFontName = fuente.nombre;
-      // Aquí se puede agregar lógica adicional para aplicar la fuente al elemento
       console.log('[Font Picker] Fuente seleccionada:', fuente.nombre);
+      
+      // Renderizar preview visual de la fuente en el botón
+      renderizarTextoConFuenteParaModal(fuente, 'Aa').then(function(canvas) {
+        if (canvas) {
+          // Convertir canvas a DataURL
+          var dataURL = canvas.toDataURL('image/png');
+          
+          // Aplicar como background-image del botón
+          activeTriggerEl.style.backgroundImage = 'url("' + dataURL + '")';
+          activeTriggerEl.style.backgroundSize = 'contain';
+          activeTriggerEl.style.backgroundPosition = 'center';
+          activeTriggerEl.style.backgroundRepeat = 'no-repeat';
+          
+          // Ocultar el texto "Aa" para que solo se vea el preview
+          activeTriggerEl.style.color = 'transparent';
+          
+          console.log('[Font Picker] Preview visual aplicado al botón');
+        }
+      }).catch(function(err) {
+        // Manejo de errores - fallback gracioso
+        console.error('[Font Picker] Error al renderizar preview para el botón:', err);
+        // El botón mantiene su apariencia actual (texto "Aa" visible)
+        // Los data attributes ya están guardados, así que la funcionalidad
+        // principal no se ve afectada
+      });
     }
 
     function renderGrid(){
@@ -2350,10 +2374,20 @@
         confirmarEliminacion('elemento', elemento.nombre, function() {
           if (typeof GestorElementos !== 'undefined' && GestorElementos.eliminar) {
             GestorElementos.eliminar(elemento.id || elemento.nombre);
-            card.remove();
-            console.log('[crearTarjetaElementoGuardado] Elemento eliminado:', elemento.nombre);
-            // Disparar evento de actualización para refrescar otras vistas
-            window.dispatchEvent(new CustomEvent('superimprimible:elementos-updated'));
+            
+            // Aplicar efecto de desintegración antes de eliminar
+            if (typeof DesintegracionFX !== 'undefined') {
+              DesintegracionFX.desintegrarCard(card, function() {
+                console.log('[crearTarjetaElementoGuardado] Elemento eliminado con efecto:', elemento.nombre);
+                // Disparar evento de actualización para refrescar otras vistas
+                window.dispatchEvent(new CustomEvent('superimprimible:elementos-updated'));
+              });
+            } else {
+              // Fallback: eliminar sin efecto si el módulo no está cargado
+              card.remove();
+              console.log('[crearTarjetaElementoGuardado] Elemento eliminado:', elemento.nombre);
+              window.dispatchEvent(new CustomEvent('superimprimible:elementos-updated'));
+            }
           }
         });
       });
@@ -2584,10 +2618,18 @@
         confirmarEliminacion('textura', textura.nombre, function() {
           if (typeof GestorTexturas !== 'undefined' && GestorTexturas.eliminar) {
             GestorTexturas.eliminar(textura.id || textura.nombre);
-            card.remove();
-            console.log('[crearTarjetaTexturaGuardada] Textura eliminada:', textura.nombre);
-            // Disparar evento de actualización para refrescar otras vistas
-            window.dispatchEvent(new CustomEvent('superimprimible:texturas-updated'));
+            
+            // Aplicar efecto de desintegración antes de eliminar
+            if (typeof DesintegracionFX !== 'undefined') {
+              DesintegracionFX.desintegrarCard(card, function() {
+                console.log('[crearTarjetaTexturaGuardada] Textura eliminada con efecto:', textura.nombre);
+                window.dispatchEvent(new CustomEvent('superimprimible:texturas-updated'));
+              });
+            } else {
+              card.remove();
+              console.log('[crearTarjetaTexturaGuardada] Textura eliminada:', textura.nombre);
+              window.dispatchEvent(new CustomEvent('superimprimible:texturas-updated'));
+            }
           }
         });
       });
@@ -2767,10 +2809,18 @@
         confirmarEliminacion('fuente', fuente.nombre, function() {
           if (typeof GestorFuentes !== 'undefined' && GestorFuentes.eliminar) {
             GestorFuentes.eliminar(fuente.id || fuente.nombre);
-            card.remove();
-            console.log('[crearTarjetaFuenteGuardada] Fuente eliminada:', fuente.nombre);
-            // Disparar evento de actualización para refrescar otras vistas
-            window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+            
+            // Aplicar efecto de desintegración antes de eliminar
+            if (typeof DesintegracionFX !== 'undefined') {
+              DesintegracionFX.desintegrarCard(card, function() {
+                console.log('[crearTarjetaFuenteGuardada] Fuente eliminada con efecto:', fuente.nombre);
+                window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+              });
+            } else {
+              card.remove();
+              console.log('[crearTarjetaFuenteGuardada] Fuente eliminada:', fuente.nombre);
+              window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+            }
           }
         });
       });
@@ -4823,29 +4873,53 @@
       const textura = (textureCircle && textureCircle.dataset.selectedTexture) || '';
       const color = colorInput ? colorInput.value : '#5b9dff';
       
-      // Recopilar personajes
+      // Recopilar personajes con cálculo de dimensiones óptimas para 300 DPI
       const personajes = [];
       if (personajesCards){
         personajesCards.querySelectorAll('.sp2-personajes-card').forEach(function(card){
           const img = card.querySelector('img');
           if (img && img.src){
+            // Calcular dimensiones óptimas para 300 DPI
+            var anchoCm = (img.naturalWidth / 300) * 2.54;
+            var altoCm = (img.naturalHeight / 300) * 2.54;
+            
             personajes.push({
               src: img.src,
-              name: card.dataset.name || 'Personaje'
+              name: card.dataset.name || 'Personaje',
+              medidas: {
+                ancho: Math.round(anchoCm * 10) / 10,
+                alto: Math.round(altoCm * 10) / 10
+              },
+              dimensionesOriginales: {
+                ancho: img.naturalWidth,
+                alto: img.naturalHeight
+              }
             });
           }
         });
       }
       
-      // Recopilar fondos
+      // Recopilar fondos con cálculo de dimensiones óptimas para 300 DPI
       const fondos = [];
       if (fondosCards){
         fondosCards.querySelectorAll('.sp2-personajes-card').forEach(function(card){
           const img = card.querySelector('img');
           if (img && img.src){
+            // Calcular dimensiones óptimas para 300 DPI
+            var anchoCm = (img.naturalWidth / 300) * 2.54;
+            var altoCm = (img.naturalHeight / 300) * 2.54;
+            
             fondos.push({
               src: img.src,
-              name: card.dataset.name || 'Fondo'
+              name: card.dataset.name || 'Fondo',
+              medidas: {
+                ancho: Math.round(anchoCm * 10) / 10,
+                alto: Math.round(altoCm * 10) / 10
+              },
+              dimensionesOriginales: {
+                ancho: img.naturalWidth,
+                alto: img.naturalHeight
+              }
             });
           }
         });
@@ -4885,6 +4959,7 @@
       
       const topRow = document.createElement('div');
       topRow.className = 'element-top-row';
+      topRow.style.display = 'none'; // Ocultar la fila superior con metadatos
       topRow.innerHTML =
         '<div class="element-name-col">' +
           '<span class="element-name-text" title="' + tematica.nombre + '">' + tematica.nombre + '</span>' +
@@ -4958,8 +5033,15 @@
             } catch (err) {
               console.error('[Temáticas] Error al eliminar:', err);
             }
-            // Remover tarjeta del DOM
-            card.remove();
+            
+            // Aplicar efecto de desintegración antes de eliminar
+            if (typeof DesintegracionFX !== 'undefined') {
+              DesintegracionFX.desintegrarCard(card, function() {
+                console.log('[Temáticas] Temática eliminada con efecto:', tematica.nombre);
+              });
+            } else {
+              card.remove();
+            }
           });
         });
       }

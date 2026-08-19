@@ -2568,11 +2568,18 @@ function prepareCanvasFromImage(img) {
       // ══════════════════════════════════════════════════════════════════════
       // GUARDAR TEXTURA EN LOCALSTORAGE
       // ══════════════════════════════════════════════════════════════════════
+      // GUARDAR TEXTURA EN LOCALSTORAGE
+      // ══════════════════════════════════════════════════════════════════════
       try {
         // Obtener el canvas procesado de la textura
         var canvas = modalCanvas;
         if (canvas && canvas.width > 0 && canvas.height > 0) {
           var preview = canvas.toDataURL('image/png');
+          
+          // Calcular dimensiones óptimas para 300 DPI usando la imagen ORIGINAL
+          var imgOriginal = item.img;
+          var anchoCm = (imgOriginal.naturalWidth / 300) * 2.54;
+          var altoCm = (imgOriginal.naturalHeight / 300) * 2.54;
           
           // Obtener la subcategoría seleccionada
           var subcategoria = (categorySelect && categorySelect.value !== '__new__') ? categorySelect.value : '';
@@ -2583,10 +2590,14 @@ function prepareCanvasFromImage(img) {
             preview: preview,
             categoria: 'Texturas',
             subcategoria: subcategoria,
-            tolerance: item.tolerance || 32
+            tolerance: item.tolerance || 32,
+            medidas: {
+              ancho: Math.round(anchoCm * 10) / 10,
+              alto: Math.round(altoCm * 10) / 10
+            }
           });
           
-          console.log('[Textura Incorporada]', texturaGuardada.nombre, 'v' + texturaGuardada.version, 'subcategoría:', texturaGuardada.subcategoria);
+          console.log('[Textura Incorporada]', texturaGuardada.nombre, 'v' + texturaGuardada.version, '- Tamaño óptimo:', texturaGuardada.medidas.ancho, '×', texturaGuardada.medidas.alto, 'cm', '(', imgOriginal.naturalWidth, '×', imgOriginal.naturalHeight, 'px', '@ 300 DPI)', 'subcategoría:', texturaGuardada.subcategoria);
           
           // Mostrar notificación breve (opcional)
           // Puedes agregar una notificación toast aquí si querés
@@ -4246,18 +4257,40 @@ function prepareCanvasFromImage(img) {
           if (canvas && canvas.width > 0 && canvas.height > 0) {
             var preview = canvas.toDataURL('image/png');
             
+            // Calcular dimensiones óptimas para 300 DPI usando la imagen ORIGINAL
+            var imgOriginal = item.img;
+            var anchoCm = (imgOriginal.naturalWidth / 300) * 2.54;
+            var altoCm = (imgOriginal.naturalHeight / 300) * 2.54;
+            
             // Guardar elemento usando GestorElementos
             var elementoGuardado = GestorElementos.guardar({
               nombre: activeModalId || 'Elemento sin nombre',
               preview: preview,
               categoria: 'Elementos',
-              tolerance: item.tolerance || 32
+              tolerance: item.tolerance || 32,
+              medidas: {
+                ancho: Math.round(anchoCm * 10) / 10,
+                alto: Math.round(altoCm * 10) / 10
+              }
             });
             
-            console.log('[Elemento Incorporado]', elementoGuardado.nombre, 'v' + elementoGuardado.version);
+            console.log('[Elemento Incorporado]', elementoGuardado.nombre, 'v' + elementoGuardado.version, '- Tamaño óptimo:', elementoGuardado.medidas.ancho, '×', elementoGuardado.medidas.alto, 'cm', '(', imgOriginal.naturalWidth, '×', imgOriginal.naturalHeight, 'px', '@ 300 DPI)');
             
-            // Mostrar notificación breve (opcional)
-            // Puedes agregar una notificación toast aquí si querés
+            // Cerrar el modal primero
+            closeAdjustModal();
+            
+            // Luego aplicar efecto de desintegración a la tarjeta
+            var card = item.cardEl;
+            if (card && typeof DesintegracionFX !== 'undefined') {
+              DesintegracionFX.desintegrarCard(card, function() {
+                console.log('[Elemento] Tarjeta desintegrada con efecto:', activeModalId);
+              });
+            } else {
+              // Si no hay efecto disponible, remover la tarjeta directamente
+              if (card) card.remove();
+            }
+          } else {
+            closeAdjustModal();
           }
         } catch (err) {
           console.error('[Error al guardar elemento]', err);
@@ -4266,10 +4299,9 @@ function prepareCanvasFromImage(img) {
           } else if (err.message === 'STORAGE_DISABLED') {
             alert('El almacenamiento local está deshabilitado en tu navegador.');
           }
+          closeAdjustModal();
         }
         // ══════════════════════════════════════════════════════════════════════
-        
-        closeAdjustModal();
       });
     }
 
