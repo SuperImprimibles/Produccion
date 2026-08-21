@@ -1,0 +1,17 @@
+{
+  "name": "superimprimible-backend",
+  "version": "1.0.0",
+  "description": "Backend para almacenamiento persistente de elementos, texturas y fuentes",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js",
+    "dev": "node servidor.js"
+  },
+  "keywords": ["backend", "storage", "api"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

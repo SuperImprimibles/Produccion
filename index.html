@@ -65,6 +65,24 @@
 
         <div class="account-menu-divider"></div>
 
+        <!-- Indicador de conexión al servidor -->
+        <div class="account-menu-connection-status" id="connection-status" style="display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:12px;font-weight:500;color:#5b5866;">
+          <span class="connection-dot" style="width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0;transition:background 0.3s ease;"></span>
+          <span class="connection-text" style="flex:1;">Verificando...</span>
+        </div>
+
+        <style>
+          .account-menu-connection-status.connected .connection-dot{
+            background:#22c55e !important;
+            box-shadow: 0 0 8px rgba(34,197,94,0.4);
+          }
+          .account-menu-connection-status.disconnected .connection-dot{
+            background:#ef4444 !important;
+          }
+        </style>
+
+        <div class="account-menu-divider"></div>
+
         <button type="button" class="account-menu-option account-menu-danger">Cerrar sesión</button>
       </div>
     </div>
@@ -151,6 +169,7 @@
             <div id="editorWrap">
               <canvas id="editorCanvas" width="640" height="480"></canvas>
               <div id="editorEraserCursor"></div>
+              
               <div id="dropHint">
                 <div style="font-size:34px;">📐</div>
                 <div class="tematicas-plantillas-text">Plantillas</div>
@@ -307,7 +326,7 @@
               </div>
             </div>
       <div class="elements-grid" id="elements-grid">
-        <div class="elements-grid-empty" id="elements-grid-empty">Aquí aparecerán los elementos que elijas.</div>
+        <div class="elements-grid-empty" id="elements-grid-empty">Aquí aparecerán los elementos que incorpores.</div>
       </div>
     </section>
 
@@ -854,7 +873,7 @@
   <div class="floating-panel" id="floating-panel">
     <input type="file" id="fileInput" accept="image/*" style="display:none">
 
-    <aside class="floating-panel-card side-panel-2" id="side-panel-2">
+    <aside class="floating-panel-card side-panel-2" id="side-panel-2" style="display:none;">
       <div class="side-panel-2-body">
         <div class="sp2-section">
           <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
@@ -1170,12 +1189,6 @@
     <div id="empty3d">
       <div style="font-size:28px;">📦</div>
     </div>
-    <div id="empty3dResizeHandle" title="Arrastrar para cambiar el tamaño">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 9 L2 14 L7 14"/>
-        <path d="M2 14 L14 2"/>
-      </svg>
-    </div>
     <div id="canvasHost"></div>
     <div id="topbar">
       <div id="badge">t = <b id="tValue">0.00</b></div>
@@ -1266,6 +1279,21 @@
 <!-- GestorPlantillas: módulo de persistencia de plantillas en localStorage -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <script src="js/gestor-plantillas.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- RenderizadorPlantillasDieline: visualización estilo Pacdora -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<script src="js/renderizador-plantillas-dieline.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- DetectorLineasColor: detecta líneas de corte (negro) y doblez (rojo) -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<script src="js/detector-lineas-color.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- IntegracionDieline: integra el renderizador con el sistema -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<script src="js/integracion-dieline.js"></script>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- GestorElementos: módulo de persistencia de elementos en localStorage -->

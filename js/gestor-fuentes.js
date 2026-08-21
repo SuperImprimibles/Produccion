@@ -1,163 +1,86 @@
 const GestorFuentes = (function() {
   'use strict';
 
-  const STORAGE_KEY = 'superimprimible_fuentes';
-  const SIZE_WARNING_BYTES = 4 * 1024 * 1024; // 4 MB
+  console.log('[GestorFuentes] Módulo cargado - usando almacenamiento en servidor');
 
-  // ── Detección temprana de localStorage deshabilitado ────────────────────
-  let _storageDisabled = false;
-  try {
-    localStorage.getItem(STORAGE_KEY);
-  } catch (e) {
-    _storageDisabled = true;
-    console.error('[GestorFuentes] localStorage no disponible:', e);
-  }
+  const API_URL = 'http://localhost:3000/api/fuentes';
 
-  // ── Helpers privados ────────────────────────────────────────────────────
-
-  function validateShape(obj) {
-    if (!obj || typeof obj !== 'object') throw new TypeError('No es un objeto');
-    const required = ['id', 'nombre', 'fechaCreacion', 'version', 'caracteres'];
-    for (const key of required) {
-      if (!(key in obj)) throw new TypeError(`Falta campo: ${key}`);
-    }
-    // Validar tipos básicos
-    if (typeof obj.id !== 'string') throw new TypeError('id debe ser string');
-    if (typeof obj.nombre !== 'string') throw new TypeError('nombre debe ser string');
-    if (typeof obj.fechaCreacion !== 'string') throw new TypeError('fechaCreacion debe ser string');
-    if (typeof obj.version !== 'number' || obj.version < 1) throw new TypeError('version debe ser number >= 1');
-    if (typeof obj.caracteres !== 'object') throw new TypeError('caracteres debe ser object');
-  }
-
-  function readAll() {
-    if (_storageDisabled) return [];
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    let entries;
+  async function listar() {
     try {
-      entries = JSON.parse(raw);
-    } catch (e) {
-      console.error('[GestorFuentes] Error al parsear JSON:', e);
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Error al cargar fuentes');
+      const fuentes = await response.json();
+      return fuentes.sort(function(a, b) {
+        return new Date(b.fechaCreacion) - new Date(a.fechaCreacion);
+      });
+    } catch (error) {
+      console.error('[GestorFuentes] Error al listar:', error);
       return [];
     }
-    if (!Array.isArray(entries)) return [];
-    // Filtrar entradas individuales corruptas
-    return entries.filter(function(entry) {
-      try {
-        validateShape(entry);
-        return true;
-      } catch (e) {
-        console.error('[GestorFuentes] Entrada corrupta ignorada:', entry, e);
-        return false;
-      }
-    });
   }
 
-  function _emitirEvento() {
-    window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+  async function obtener(id) {
+    try {
+      const fuentes = await listar();
+      return fuentes.find(function(p) { return p.id === id; }) || null;
+    } catch (error) {
+      console.error('[GestorFuentes] Error al obtener:', error);
+      return null;
+    }
   }
 
-  function _notificarAlmacenamientoLleno() {
-    console.warn('[GestorFuentes] Almacenamiento casi lleno (>= 4 MB)');
+  async function eliminar(id) {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Error al eliminar fuente');
+      window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+      return true;
+    } catch (error) {
+      console.error('[GestorFuentes] Error al eliminar:', error);
+      return false;
+    }
   }
 
-  // ── API Pública ────────────────────────────────────────────────────────
-
-  function calcularTamano() {
-    const raw = localStorage.getItem(STORAGE_KEY) || '';
-    return new Blob([raw]).size;
-  }
-
-  function listar() {
-    return readAll().sort(function(a, b) {
-      // Ordenar por fechaCreacion descendente
-      return new Date(b.fechaCreacion) - new Date(a.fechaCreacion);
-    });
-  }
-
-  function obtener(id) {
-    var fuentes = readAll();
-    return fuentes.find(function(p) { return p.id === id; }) || null;
-  }
-
-  function eliminar(id) {
-    if (_storageDisabled) return;
-    var fuentes = readAll().filter(function(p) { return p.id !== id; });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fuentes));
-    _emitirEvento();
-  }
-
-  function guardar(datos) {
-    if (_storageDisabled) throw new Error('STORAGE_DISABLED');
-
-    // Validar nombre no vacío
+  async function guardar(datos) {
     var nombre = (datos.nombre || '').trim();
     if (!nombre) throw new Error('NOMBRE_VACIO');
-
-    // Validar que hay caracteres
+    
     if (!datos.caracteres || Object.keys(datos.caracteres).length === 0) {
       throw new Error('CARACTERES_VACIOS');
     }
 
-    var fuentes = readAll();
-    
-    // Buscar entrada existente por nombre (case-insensitive upsert)
-    var nombreLower = nombre.toLowerCase();
-    var existing = fuentes.find(function(p) {
-      return p.nombre.toLowerCase() === nombreLower;
-    });
-
-    var fuente;
-    if (existing) {
-      // Upsert: preservar id, incrementar version
-      fuente = {
-        id: existing.id,
-        nombre: nombre,
-        caracteres: datos.caracteres, // { 'A': 'data:image/png;base64,...', 'B': '...', ... }
-        preview: datos.preview || existing.preview, // Vista previa del nombre renderizado
-        fechaCreacion: existing.fechaCreacion,
-        version: existing.version + 1,
-        // Metadatos opcionales
-        categoria: datos.categoria || existing.categoria,
-        tintColor: datos.tintColor || existing.tintColor
-      };
-      // Reemplazar en el array
-      var idx = fuentes.findIndex(function(p) { return p.id === existing.id; });
-      fuentes[idx] = fuente;
-    } else {
-      // Crear nuevo
-      fuente = {
-        id: 'fuente_' + Date.now().toString(36) + Math.random().toString(36).slice(2),
-        nombre: nombre,
-        caracteres: datos.caracteres,
-        preview: datos.preview || null,
-        fechaCreacion: new Date().toISOString(),
-        version: 1,
-        // Metadatos opcionales
-        categoria: datos.categoria || 'Fuentes',
-        tintColor: datos.tintColor || null
-      };
-      fuentes.push(fuente);
-    }
-
-    // Escribir en localStorage
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fuentes));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        throw new Error('QUOTA_EXCEEDED');
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nombre,
+          caracteres: datos.caracteres,
+          preview: datos.preview || null,
+          categoria: datos.categoria || 'Fuentes',
+          tintColor: datos.tintColor || null
+        })
+      });
+
+      if (!response.ok) throw new Error('Error al guardar fuente');
+      
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Error desconocido');
+
+      window.dispatchEvent(new CustomEvent('superimprimible:fuentes-updated'));
+      
+      return result.fuente;
+    } catch (error) {
+      console.error('[GestorFuentes] Error al guardar:', error);
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error('SERVIDOR_NO_DISPONIBLE');
       }
-      throw e;
+      throw error;
     }
+  }
 
-    _emitirEvento();
-
-    // Verificar tamaño y notificar si >= 4 MB
-    if (calcularTamano() >= SIZE_WARNING_BYTES) {
-      _notificarAlmacenamientoLleno();
-    }
-
-    return fuente;
+  function calcularTamano() {
+    return 0;
   }
 
   return {
@@ -168,3 +91,6 @@ const GestorFuentes = (function() {
     calcularTamano: calcularTamano
   };
 })();
+
+// Exportar al scope global
+window.GestorFuentes = GestorFuentes;

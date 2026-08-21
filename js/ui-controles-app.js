@@ -261,8 +261,8 @@
       const wrapW = editorWrap.clientWidth;
       const wrapH = editorWrap.clientHeight;
       if (!wrapW || !wrapH) return;
-      const availW = wrapW * 0.92;
-      const availH = wrapH * 0.92;
+      const availW = wrapW * 0.60;
+      const availH = wrapH * 0.60;
       const centerX = wrapW / 2;
       const centerY = wrapH / 2;
 
@@ -302,14 +302,7 @@
       if (canvasEl && canvasEl.classList.contains('has-image')){
         canvasEl.style.maxWidth = 'none';
         canvasEl.style.maxHeight = 'none';
-        // object-fit:contain (CSS por defecto) fuerza a que el contenido dibujado
-        // mantenga SIEMPRE la proporción original del canvas, sin importar qué
-        // width/height le pongamos por JS — por eso, aunque el recuadro cambiara de
-        // forma, el elemento se seguía viendo "contenido" con su proporción intacta.
-        // Acá SÍ queremos que se deforme de verdad cuando el Bloqueo de
-        // Proporcionalidad está desactivado, así que forzamos 'fill' (estira el
-        // contenido para llenar exactamente el ancho/alto asignados).
-        canvasEl.style.objectFit = 'fill';
+        canvasEl.style.objectFit = '';
         if (shapeBbox && shapeBbox.width > 0 && shapeBbox.height > 0 && canvasEl.width && canvasEl.height){
           const shapeScaleX = frameW / shapeBbox.width;
           const shapeScaleY = frameH / shapeBbox.height;
@@ -320,13 +313,8 @@
           canvasEl.style.height = (canvasEl.height * shapeScaleY) + 'px';
           canvasEl.style.left = (centerX - bboxCenterXpx * shapeScaleX) + 'px';
           canvasEl.style.top = (centerY - bboxCenterYpx * shapeScaleY) + 'px';
-          // Recorta todo lo que quede fuera del bbox de la forma — el resto
-          // del lienzo (relleno vacío) queda invisible, solo se ve la forma.
-          const clipTop = (shapeBbox.minY / canvasEl.height) * 100;
-          const clipRight = (1 - shapeBbox.maxX / canvasEl.width) * 100;
-          const clipBottom = (1 - shapeBbox.maxY / canvasEl.height) * 100;
-          const clipLeft = (shapeBbox.minX / canvasEl.width) * 100;
-          canvasEl.style.clipPath = 'inset(' + clipTop + '% ' + clipRight + '% ' + clipBottom + '% ' + clipLeft + '%)';
+          // NO usar clipPath - dejar que el canvas se estire libremente
+          canvasEl.style.clipPath = '';
         } else {
           // Todavía no hay máscaras (sin segmentar): escalamos el canvas
           // completo al tamaño del recuadro, centrado normalmente.
@@ -359,7 +347,7 @@
 
     function resetCanvasSize(){
       // Vuelve la plantilla a su tamaño y posición naturales (flujo normal,
-      // centrada por flex, capada al 92% del área).
+      // centrada por flex, capada al 60% del área).
       if (!canvasEl) return;
       canvasEl.style.width = '';
       canvasEl.style.height = '';
@@ -1173,18 +1161,77 @@
     });
   })();
 
-  // Interruptor "MAQUETA" del rail vertical: decide si #side-card es visible.
+  // Interruptor "MAQUETA" del rail vertical: cambia entre vista 2D y vista 3D.
   (function(){
     const toggle = document.getElementById('railMaquetaToggle');
+    const paneEditor = document.getElementById('pane-editor'); // Vista 2D
     const sideCard = document.getElementById('side-card');
-    if (!toggle || !sideCard) return;
+    const canvasHost = document.getElementById('canvasHost');
+    const empty3d = document.getElementById('empty3d');
+    const topbar = document.getElementById('topbar');
+    const foldControls = document.getElementById('foldCollapseControls');
+    const content = document.querySelector('.content');
+    
+    if (!toggle || !paneEditor || !sideCard) return;
 
-    function applyMaquetaVisibility(){
-      sideCard.style.display = toggle.checked ? '' : 'none';
+    function applyViewToggle(){
+      if (toggle.checked) {
+        // Ocultar vista 2D
+        paneEditor.style.display = 'none';
+        
+        // Hacer que side-card ocupe toda el área de .content
+        // Usar position absolute para que respete el overflow de .window
+        sideCard.style.position = 'absolute';
+        sideCard.style.top = '0';
+        sideCard.style.left = '0';
+        sideCard.style.width = '100%';
+        sideCard.style.height = '100%';
+        sideCard.style.right = 'auto';
+        sideCard.style.zIndex = '50'; // Por debajo de floating-panel y rail (z-index: 60)
+        sideCard.style.borderRadius = '0';
+        sideCard.style.border = 'none';
+        sideCard.style.background = 'transparent'; // Fondo transparente en modo pantalla completa
+        sideCard.style.backdropFilter = 'none';
+        sideCard.style.boxShadow = 'none';
+        
+        // Mostrar el visor 3D y ocultar el placeholder
+        if (canvasHost) canvasHost.style.display = 'block';
+        if (empty3d) empty3d.style.display = 'none';
+        if (topbar) topbar.style.display = '';
+        if (foldControls) foldControls.style.display = '';
+        
+        // Redimensionar el visor 3D después de cambiar el tamaño
+        if (typeof resize3D === 'function') {
+          setTimeout(resize3D, 100);
+        }
+      } else {
+        // Restaurar vista 2D
+        paneEditor.style.display = '';
+        
+        // Restaurar side-card a su posición flotante original
+        sideCard.style.position = '';
+        sideCard.style.top = '';
+        sideCard.style.left = '';
+        sideCard.style.width = '';
+        sideCard.style.height = '';
+        sideCard.style.right = '';
+        sideCard.style.zIndex = '';
+        sideCard.style.borderRadius = '';
+        sideCard.style.border = '';
+        sideCard.style.background = '';
+        sideCard.style.backdropFilter = '';
+        sideCard.style.boxShadow = '';
+        
+        // Ocultar el visor 3D y mostrar el placeholder
+        if (canvasHost) canvasHost.style.display = 'none';
+        if (empty3d) empty3d.style.display = 'flex';
+        if (topbar) topbar.style.display = 'none';
+        if (foldControls) foldControls.style.display = 'none';
+      }
     }
 
-    toggle.addEventListener('change', applyMaquetaVisibility);
-    applyMaquetaVisibility();
+    toggle.addEventListener('change', applyViewToggle);
+    applyViewToggle();
   })();
 
   // Círculo de color: al hacer click, abre el selector de colores nativo.
@@ -2228,17 +2275,17 @@
   // ══════════════════════════════════════════════════════════════════════
 
   // ══════════════════════════════════════════════════════════════════════
-  // CARGAR ELEMENTOS GUARDADOS DESDE LOCALSTORAGE
+  // CARGAR ELEMENTOS GUARDADOS DESDE SERVIDOR
   // ══════════════════════════════════════════════════════════════════════
-  function cargarElementosGuardados() {
+  async function cargarElementosGuardados() {
     console.log('[cargarElementosGuardados] Iniciando carga...');
     if (typeof GestorElementos === 'undefined') {
       console.warn('[Marketing] GestorElementos no está disponible');
       return;
     }
     
-    var elementosGuardados = GestorElementos.listar();
-    console.log('[cargarElementosGuardados] Elementos en localStorage:', elementosGuardados);
+    var elementosGuardados = await GestorElementos.listar();
+    console.log('[cargarElementosGuardados] Elementos en servidor:', elementosGuardados);
     
     if (!elementosGuardados || elementosGuardados.length === 0) {
       console.log('[cargarElementosGuardados] No hay elementos guardados');
@@ -2267,6 +2314,41 @@
         crearTarjetaElementoGuardado(elemento);
       }
     });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // VERIFICAR CONEXIÓN AL SERVIDOR
+  // ══════════════════════════════════════════════════════════════════════
+  async function verificarConexionServidor() {
+    const statusEl = document.getElementById('connection-status');
+    const dotEl = statusEl ? statusEl.querySelector('.connection-dot') : null;
+    const textEl = statusEl ? statusEl.querySelector('.connection-text') : null;
+    
+    if (!statusEl) {
+      console.log('[Conexión] Elemento connection-status no encontrado');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/api/elementos', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        statusEl.classList.remove('disconnected');
+        statusEl.classList.add('connected');
+        if (textEl) textEl.textContent = 'Conectado';
+        console.log('[Conexión] Servidor conectado correctamente');
+      } else {
+        throw new Error('Respuesta no válida del servidor');
+      }
+    } catch (error) {
+      console.error('[Conexión] Error al conectar con el servidor:', error);
+      statusEl.classList.remove('connected');
+      statusEl.classList.add('disconnected');
+      if (textEl) textEl.textContent = 'Desconectado';
+    }
   }
 
   function crearTarjetaElementoGuardado(elemento) {
@@ -2423,14 +2505,14 @@
   // ══════════════════════════════════════════════════════════════════════
   // CARGAR ELEMENTOS EN EL SIDE-PANEL-2 (Vista Diseño)
   // ══════════════════════════════════════════════════════════════════════
-  function cargarElementosEnSidePanel() {
+  async function cargarElementosEnSidePanel() {
     console.log('[cargarElementosEnSidePanel] Iniciando carga en side-panel-2...');
     if (typeof GestorElementos === 'undefined') {
       console.warn('[SidePanel2] GestorElementos no está disponible');
       return;
     }
     
-    var elementosGuardados = GestorElementos.listar();
+    var elementosGuardados = await GestorElementos.listar();
     console.log('[cargarElementosEnSidePanel] Elementos disponibles:', elementosGuardados);
     
     // Llenar los cuadrados del side-panel-2 (máximo 24)
@@ -2471,15 +2553,15 @@
   // ══════════════════════════════════════════════════════════════════════
   // CARGAR TEXTURAS GUARDADAS DESDE LOCALSTORAGE
   // ══════════════════════════════════════════════════════════════════════
-  function cargarTexturasGuardadas() {
+  async function cargarTexturasGuardadas() {
     console.log('[cargarTexturasGuardadas] Iniciando carga...');
     if (typeof GestorTexturas === 'undefined') {
       console.warn('[Marketing] GestorTexturas no está disponible');
       return;
     }
     
-    var texturasGuardadas = GestorTexturas.listar();
-    console.log('[cargarTexturasGuardadas] Texturas en localStorage:', texturasGuardadas);
+    var texturasGuardadas = await GestorTexturas.listar();
+    console.log('[cargarTexturasGuardadas] Texturas en servidor:', texturasGuardadas);
     
     if (!texturasGuardadas || texturasGuardadas.length === 0) {
       console.log('[cargarTexturasGuardadas] No hay texturas guardadas');
@@ -2658,15 +2740,15 @@
   // ══════════════════════════════════════════════════════════════════════
   // CARGAR FUENTES GUARDADAS DESDE LOCALSTORAGE
   // ══════════════════════════════════════════════════════════════════════
-  function cargarFuentesGuardadas() {
+  async function cargarFuentesGuardadas() {
     console.log('[cargarFuentesGuardadas] Iniciando carga...');
     if (typeof GestorFuentes === 'undefined') {
       console.warn('[Marketing] GestorFuentes no está disponible');
       return;
     }
     
-    var fuentesGuardadas = GestorFuentes.listar();
-    console.log('[cargarFuentesGuardadas] Fuentes en localStorage:', fuentesGuardadas);
+    var fuentesGuardadas = await GestorFuentes.listar();
+    console.log('[cargarFuentesGuardadas] Fuentes en servidor:', fuentesGuardadas);
     
     if (!fuentesGuardadas || fuentesGuardadas.length === 0) {
       console.log('[cargarFuentesGuardadas] No hay fuentes guardadas');
@@ -3231,7 +3313,7 @@
     if (chosenCards.length === 0){
       const empty = document.createElement('div');
       empty.className = 'qty-empty-message';
-      empty.textContent = 'Aquí aparecerán los elementos que elijas.';
+      empty.textContent = 'Aquí aparecerán los elementos que incorpores.';
       chosenElementsList.appendChild(empty);
       return;
     }
@@ -3441,6 +3523,9 @@
   cargarTexturasGuardadas();
   console.log('[Init] Llamando a cargarFuentesGuardadas después de inicializar filtros...');
   cargarFuentesGuardadas();
+
+  // Verificar conexión con el servidor
+  verificarConexionServidor();
 
   document.querySelectorAll('.stepper-btn').forEach(btn => {
     if (btn.dataset.action !== 'inc' && btn.dataset.action !== 'dec') return;
@@ -4547,6 +4632,7 @@
         
         if (deleteBtn) {
           deleteBtn.style.display = 'flex';
+          deleteBtn.style.opacity = '1';
           console.log('[Stickers] deleteBtn display establecido a flex');
         }
         if (rotateHandle) rotateHandle.style.display = 'flex';
@@ -4737,8 +4823,18 @@
     // Habilitar drop en el editorWrap
     editorWrap.addEventListener('dragover', function(e) {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      editorWrap.style.outline = '2px dashed #2196F3';
+      
+      // Verificar si es un archivo de imagen
+      const hasFiles = e.dataTransfer.types && e.dataTransfer.types.includes('Files');
+      
+      if (hasFiles) {
+        // Es un archivo - permitir drop para carga de imagen
+        e.dataTransfer.dropEffect = 'copy';
+      } else {
+        // Es un sticker - permitir drop para añadir sticker
+        e.dataTransfer.dropEffect = 'copy';
+        editorWrap.style.outline = '2px dashed #2196F3';
+      }
     });
     
     editorWrap.addEventListener('dragleave', function() {
@@ -4749,6 +4845,13 @@
       e.preventDefault();
       editorWrap.style.outline = '';
       
+      // PRIMERO: Verificar si es un archivo de imagen (tiene prioridad)
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        // Esto es un archivo - no procesarlo aquí, lo maneja visor-3d.js
+        return;
+      }
+      
+      // SEGUNDO: Si no es un archivo, procesar como sticker
       try {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
         
@@ -4769,7 +4872,8 @@
           console.log('[Stickers] Elemento soltado en canvas:', data.elementoNombre);
         }
       } catch (err) {
-        console.error('[Stickers] Error al procesar drop:', err);
+        // Error al parsear JSON, probablemente no es un sticker
+        console.log('[Stickers] No se pudo procesar como sticker, ignorando');
       }
     });
     
