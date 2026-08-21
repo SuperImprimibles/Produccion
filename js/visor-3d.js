@@ -2,6 +2,23 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ============================================================
+   GESTORES DE PERSISTENCIA (acceso desde scope global)
+============================================================ */
+// Los gestores se cargan como scripts normales en index.html.
+// Accedemos a ellos de forma directa desde window.
+function getGestorElementos() {
+  return window.GestorElementos || null;
+}
+
+function getGestorTexturas() {
+  return window.GestorTexturas || null;
+}
+
+function getGestorFuentes() {
+  return window.GestorFuentes || null;
+}
+
+/* ============================================================
    ESTADO GLOBAL
 ============================================================ */
 const state = {
@@ -38,6 +55,8 @@ const state = {
     heightCm: 29.7,
     manual: false,       // true en cuanto el usuario toca un slider a mano: deja de recalcularse solo
     lockAspect: true,     // Bloqueo de Proporcionalidad — ver #lockAspectToggle
+    scaleX: 1,           // Escala visual horizontal (para distorsión cuando lockAspect = false)
+    scaleY: 1,           // Escala visual vertical (para distorsión cuando lockAspect = false)
   },
 };
 
@@ -96,6 +115,16 @@ function getMasksBBoxPx() {
 // de la forma (no el canvas completo, que tiene relleno alrededor) — pero
 // vive en otro scope, así que se lo pasamos por acá.
 window.__spGetMasksBBoxPx = getMasksBBoxPx;
+
+// Exponer máscaras para el renderizador dieline
+window.__spGetMasks = function() {
+  return state.masks || [];
+};
+
+// Exponer función de redibujo para restaurar imagen original
+window.__spRedrawCanvas = function() {
+  drawEditorOverlay();
+};
 
 // Recalcula Ancho/Alto desde el conjunto de máscaras. No hace nada si el
 // usuario ya fijó el tamaño a mano (state.dims.manual) — llamar SIEMPRE
@@ -262,8 +291,8 @@ function loadImageFromDataUrl(dataUrl) {
     prepareCanvasFromImage(img);
     dropHint.style.display = 'none';
     editorCanvas.classList.add('has-image');
-    // apenas se carga la imagen, se detectan las caras automáticamente con
-    // los valores actuales de umbral/tolerancia — no hace falta tocar un botón
+    // Siempre ejecutar segmentación para generar máscaras/jerarquía
+    // La máscara procesada se mantiene visible gracias a las protecciones en drawEditorOverlay y fillEditorCanvasWithSp2Color
     triggerAutoSegment();
   };
   img.src = dataUrl;
@@ -317,7 +346,74 @@ function prepareCanvasFromImage(img) {
   editorCanvas.height = h;
   ectx.fillStyle = '#fff';
   ectx.fillRect(0, 0, w, h);
-  ectx.drawImage(img, 0, 0, w, h);
+  
+  // Flags de control
+  editorCanvas._mascaraProcesada = false;
+  editorCanvas._mascaraFinal = null;
+  editorCanvas._usarMascaraGrisVisual = false;
+  
+  // Procesar imagen con el sistema de detección de colores
+  if (typeof DetectorLineasColor !== 'undefined') {
+    console.log('[Visor3D] Procesando plantilla con detección de colores...');
+    
+    try {
+      const resultado = DetectorLineasColor.analizarImagenPorColor(img);
+      
+      // IMPORTANTE: Usar la imagen ORIGINAL (con líneas de color) para la segmentación tradicional
+      // NO usar mascaraParaSegmentar - eso daba 69 regiones
+      ectx.drawImage(img, 0, 0, w, h);
+      
+      // Guardar la máscara gris SOLO para visualización posterior
+      const mascaraFinal = document.createElement('canvas');
+      mascaraFinal.width = w;
+      mascaraFinal.height = h;
+      const ctxFinal = mascaraFinal.getContext('2d');
+      ctxFinal.imageSmoothingEnabled = true;
+      ctxFinal.imageSmoothingQuality = 'high';
+      ctxFinal.drawImage(resultado.mascaraCanvas, 0, 0, w, h);
+      
+      // Escalar coordenadas de bisagras
+      const scaleX = w / resultado.info.width;
+      const scaleY = h / resultado.info.height;
+      const bisagrasEscaladas = resultado.bisagras.map(linea => 
+        linea.map(punto => ({
+          x: Math.round(punto.x * scaleX),
+          y: Math.round(punto.y * scaleY)
+        }))
+      );
+      
+      // Guardar información para uso posterior
+      editorCanvas._bisagras = bisagrasEscaladas;
+      editorCanvas._mascaraFinal = mascaraFinal;
+      editorCanvas._mascaraProcesada = true;
+      
+      console.log('[Visor3D] Procesamiento completado:', {
+        ...resultado.info,
+        bisagrasEscaladas: bisagrasEscaladas.length,
+        canvasSize: `${w}x${h}`
+      });
+      
+      // Activar automáticamente el toggle "Plegable" si se detectaron bisagras (líneas rojas)
+      if (resultado.info.bisagrasDetectadas > 0) {
+        const toggleSettings = document.getElementById('foldableToggleSettings');
+        const toggle = document.getElementById('foldableTemplateToggle');
+        
+        if (toggleSettings && !toggleSettings.checked) {
+          toggleSettings.checked = true;
+          // Disparar el evento change para sincronizar con el otro toggle y aplicar el estado
+          toggleSettings.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('[Visor3D] Toggle "Plegable" activado automáticamente (bisagras detectadas:', resultado.info.bisagrasDetectadas, ')');
+        }
+      }
+      
+    } catch (error) {
+      console.error('[Visor3D] Error en procesamiento, usando imagen original:', error);
+      ectx.drawImage(img, 0, 0, w, h);
+    }
+  } else {
+    ectx.drawImage(img, 0, 0, w, h);
+  }
+  
   state.iw = w; state.ih = h;
 }
 
@@ -802,6 +898,12 @@ function prepareCanvasFromImage(img) {
         }
         
         // Guardar fuente usando GestorFuentes
+        const GestorFuentes = getGestorFuentes();
+        if (!GestorFuentes) {
+          alert('Error: GestorFuentes no está disponible');
+          return;
+        }
+        
         const fuenteGuardada = GestorFuentes.guardar({
           nombre: nombre,
           caracteres: caracteres,
@@ -885,6 +987,10 @@ function prepareCanvasFromImage(img) {
     // Event listener para el botón "Incorporar Todos"
     if (incorporarTodosBtn) {
       incorporarTodosBtn.addEventListener('click', function() {
+        console.log('[Texturas] Click en Incorporar Todos');
+        console.log('[Texturas] window.GestorTexturas:', window.GestorTexturas);
+        console.log('[Texturas] typeof window.GestorTexturas:', typeof window.GestorTexturas);
+        
         var cards = grid.querySelectorAll('.texturas-upload-card');
         if (cards.length === 0) return;
         
@@ -920,6 +1026,13 @@ function prepareCanvasFromImage(img) {
             var altoCm = (img.naturalHeight / 300) * 2.54;
             
             // Guardar textura con categoría por defecto
+            const GestorTexturas = getGestorTexturas();
+            if (!GestorTexturas) {
+              console.error('[Error al incorporar textura]', id, 'GestorTexturas no está disponible. Verifica que js/gestor-texturas.js esté cargado antes de js/visor-3d.js');
+              alert('Error: El sistema de almacenamiento no está disponible. Por favor, recargá la página.');
+              return;
+            }
+            
             var texturaGuardada = GestorTexturas.guardar({
               nombre: id || 'Textura ' + (incorporadas + 1),
               preview: preview,
@@ -2707,6 +2820,13 @@ function prepareCanvasFromImage(img) {
           var subcategoria = (categorySelect && categorySelect.value !== '__new__') ? categorySelect.value : '';
           
           // Guardar textura usando GestorTexturas
+          const GestorTexturas = getGestorTexturas();
+          if (!GestorTexturas) {
+            alert('Error: GestorTexturas no está disponible');
+            closeAdjustModal();
+            return;
+          }
+          
           var texturaGuardada = GestorTexturas.guardar({
             nombre: activeModalId || 'Textura sin nombre',
             preview: preview,
@@ -2829,6 +2949,13 @@ function prepareCanvasFromImage(img) {
             var altoCm = (img.naturalHeight / 300) * 2.54;
             
             // Guardar elemento
+            const GestorElementos = getGestorElementos();
+            if (!GestorElementos) {
+              console.error('[Error al incorporar elemento]', id, 'GestorElementos no está disponible. Verifica que js/gestor-elementos.js esté cargado antes de js/visor-3d.js');
+              alert('Error: El sistema de almacenamiento no está disponible. Por favor, recargá la página.');
+              return;
+            }
+            
             var elementoGuardado = GestorElementos.guardar({
               nombre: id || 'Elemento ' + (incorporados + 1),
               preview: preview,
@@ -4490,6 +4617,13 @@ function prepareCanvasFromImage(img) {
             var altoCm = (imgOriginal.naturalHeight / 300) * 2.54;
             
             // Guardar elemento usando GestorElementos
+            const GestorElementos = getGestorElementos();
+            if (!GestorElementos) {
+              alert('Error: GestorElementos no está disponible');
+              closeAdjustModal();
+              return;
+            }
+            
             var elementoGuardado = GestorElementos.guardar({
               nombre: activeModalId || 'Elemento sin nombre',
               preview: preview,
@@ -4641,8 +4775,73 @@ console.log('[superimprimible] build cargado:', BUILD_TAG);
   } catch(e) {}
 })();
 
+// Detecta grupos de máscaras desconectadas que deberían ser plantillas independientes
+function detectSeparateTemplates(masks, adjacency) {
+  if (masks.length === 0) return [];
+  
+  // Crear un grafo de conectividad entre máscaras
+  const connected = new Map();
+  masks.forEach(m => connected.set(m.id, new Set()));
+  
+  // Agregar conexiones basadas en adyacencia
+  for (const [key, info] of adjacency) {
+    const [a, b] = key.split('_').map(Number);
+    if (connected.has(a) && connected.has(b)) {
+      connected.get(a).add(b);
+      connected.get(b).add(a);
+    }
+  }
+  
+  // Usar BFS para encontrar componentes conectados
+  const visited = new Set();
+  const groups = [];
+  
+  masks.forEach(mask => {
+    if (visited.has(mask.id)) return;
+    
+    // Nuevo grupo encontrado
+    const group = [];
+    const queue = [mask.id];
+    visited.add(mask.id);
+    
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      const currentMask = masks.find(m => m.id === currentId);
+      if (currentMask) group.push(currentMask);
+      
+      // Agregar vecinos conectados
+      const neighbors = connected.get(currentId) || new Set();
+      for (const neighborId of neighbors) {
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
+          queue.push(neighborId);
+        }
+      }
+    }
+    
+    if (group.length > 0) {
+      groups.push(group);
+    }
+  });
+  
+  // Ordenar grupos por área total (más grande primero)
+  groups.sort((a, b) => {
+    const areaA = a.reduce((sum, m) => sum + m.area, 0);
+    const areaB = b.reduce((sum, m) => sum + m.area, 0);
+    return areaB - areaA;
+  });
+  
+  console.log(`[detectSeparateTemplates] Encontrados ${groups.length} grupos:`, 
+    groups.map(g => `${g.length} máscaras`));
+  
+  return groups;
+}
+
 function runSegmentation() {
   if (!state.iw || !state.ih) return;
+  
+  // Verificar si ya hay una máscara procesada por el detector de color
+  const mascaraProcesadaPrevio = editorCanvas._mascaraProcesada;
 
   // reinicio completo del estado de máscaras/jerarquía/modelo antes de cada detección:
   // sin esto, una corrida anterior (máscaras, selección, modelo 3D construido) podía
@@ -4661,21 +4860,37 @@ function runSegmentation() {
   document.getElementById('empty3d').style.display = 'flex';
   document.getElementById('canvasHost').style.display = 'none';
   state.buildLogLines = [];
+  
+  // Ocultar el panel de jerarquías cuando se reinicia el estado
+  const hierarchyPanel = document.getElementById('floatingPanelHierarchySection');
+  if (hierarchyPanel) hierarchyPanel.style.display = 'none';
 
   const w = state.iw, h = state.ih;
+  
+  // SEGMENTACIÓN TRADICIONAL (siempre usar este sistema)
+  console.log('[runSegmentation] Usando segmentación tradicional');
+  
+  const mascaraProcesadaAntes = editorCanvas._mascaraProcesada;
+  
+  console.log('[runSegmentation] mascaraProcesadaAntes:', mascaraProcesadaAntes);
+  
   // ARREGLO: drawEditorOverlay() pinta tintes de color y etiquetas de texto
   // ("Máscara N") directo sobre este mismo canvas (ectx). Si no se restaura
   // la imagen original ACÁ antes de leer los píxeles, una segmentación
   // repetida (el auto-segmentado puede dispararse más de una vez) termina
   // leyendo ese texto/tinte como si fuera parte del dibujo, rompiendo la
   // forma de la máscara que tenía la etiqueta encima.
+  // 
+  // RESTAURAR sourceImage siempre antes de segmentar
   if (sourceImage) {
+    console.log('[runSegmentation] Restaurando sourceImage (imagen original)');
     ectx.clearRect(0, 0, w, h);
     ectx.fillStyle = '#fff';
     ectx.fillRect(0, 0, w, h);
     ectx.drawImage(sourceImage, 0, 0, w, h);
     applyTemplateEraseStrokes(ectx, w, h);
   }
+  
   const imgData = ectx.getImageData(0, 0, w, h);
   const ink = new Uint8Array(w*h);
   let inkCount = 0;
@@ -4685,6 +4900,9 @@ function runSegmentation() {
     if (ink[p]) inkCount++;
   }
   state.ink = ink;
+  
+  console.log('[runSegmentation] Umbral actual:', state.threshold);
+  console.log('[runSegmentation] Píxeles de tinta detectados:', inkCount, 'de', w*h, '=', (inkCount/(w*h)*100).toFixed(2) + '%');
 
   // guardia de rendimiento: si el umbral quedó muy alto, casi toda la imagen se
   // clasifica como "tinta" y el escaneo de adyacencias (que recorre cada píxel
@@ -4756,15 +4974,35 @@ function runSegmentation() {
   state.adjacency = adjResult.adjacency;
   state.fanClusters = adjResult.fanClusters;
   state.inkClass = adjResult.inkClass;
-  // filtra el exterior y las máscaras que quedaron con área 0 (fusionadas hacia otra)
-  state.masks = masks.filter(m => m.id !== exteriorId && m.area > 0);
+  
+  // Detectar huecos (regiones interiores que no deberían ser paneles)
+  const holes = detectHoles(masks, adjResult.adjacency, exteriorId);
+  console.log('[runSegmentation] Huecos detectados:', holes.size);
+  
+  // Filtrar el exterior, huecos y máscaras con área 0 (fusionadas hacia otra)
+  state.masks = masks.filter(m => m.id !== exteriorId && !holes.has(m.id) && m.area > 0);
+  
+  console.log('[runSegmentation] Máscaras detectadas:', state.masks.length);
+  console.log('[runSegmentation] Primera máscara:', state.masks[0]);
 
   initMeta();
   renderFanNotes();
   renderMaskList();
   renderHierarchy();
+  
+  // Si hay una máscara gris procesada, activar su visualización después de segmentar
+  if (editorCanvas._mascaraProcesada && editorCanvas._mascaraFinal && state.masks.length > 0) {
+    editorCanvas._usarMascaraGrisVisual = true;
+    console.log('[runSegmentation] Activando visualización de máscara gris');
+  }
+  
   drawEditorOverlay();
   recalcDimsFromMasks();
+  
+  // Disparar evento para el renderizador dieline
+  document.dispatchEvent(new CustomEvent('sp:segmentationComplete', {
+    detail: { masks: state.masks }
+  }));
 }
 
 function floodFillLabels(ink, w, h) {
@@ -4829,6 +5067,50 @@ function detectExterior(masks) {
   return best;
 }
 
+// Detecta huecos: regiones que NO tocan el borde y están completamente rodeadas
+// por otras máscaras. Estas son como "agujeros" en la plantilla (ej: ventanas,
+// recortes decorativos) y no deberían convertirse en paneles 3D.
+function detectHoles(masks, adjacency, exteriorId) {
+  const holes = new Set();
+  masks.forEach(m => {
+    // Si toca el borde, no es un hueco
+    if (m.touchesBorder) return;
+    // El exterior ya lo filtramos aparte
+    if (m.id === exteriorId) return;
+    
+    // Un hueco típicamente:
+    // 1. Solo linda con una única máscara "dueña" (completamente rodeado por ella)
+    // 2. O solo tiene al exterior como vecino (aislado)
+    
+    const neighbors = new Set();
+    adjacency.forEach((data, key) => {
+      const [a, b] = key.split('_').map(Number);
+      if (a === m.id) neighbors.add(b);
+      if (b === m.id) neighbors.add(a);
+    });
+    
+    // Si no tiene vecinos reales (solo exterior o ninguno), probablemente es un hueco aislado
+    const realNeighbors = Array.from(neighbors).filter(id => id !== exteriorId);
+    
+    console.log(`[detectHoles] Máscara ${m.id}: área=${m.area}, touchesBorder=${m.touchesBorder}, vecinos reales=${realNeighbors.length}, todos los vecinos=[${Array.from(neighbors).join(',')}]`);
+    
+    if (realNeighbors.length === 0) {
+      console.log(`[detectHoles] -> Máscara ${m.id} marcada como hueco (sin vecinos reales)`);
+      holes.add(m.id);
+      return;
+    }
+    
+    // Si solo tiene UN vecino real, es un hueco completamente rodeado por esa máscara
+    // No importa el tamaño relativo - si está completamente rodeado, es un hueco
+    if (realNeighbors.length === 1) {
+      console.log(`[detectHoles] -> Máscara ${m.id} marcada como hueco (completamente rodeada por máscara ${realNeighbors[0]})`);
+      holes.add(m.id);
+    }
+  });
+  console.log(`[detectHoles] Total de huecos detectados: ${holes.size}, IDs: [${Array.from(holes).join(',')}]`);
+  return holes;
+}
+
 function bboxContour(b) {
   return [ {x:b.minX,y:b.minY}, {x:b.maxX,y:b.minY}, {x:b.maxX,y:b.maxY}, {x:b.minX,y:b.maxY} ];
 }
@@ -4841,6 +5123,17 @@ function polygonAreaPx(pts) {
     a += p1.x*p2.y - p2.x*p1.y;
   }
   return Math.abs(a/2);
+}
+
+// Área FIRMADA (con signo) para detectar orientación del contorno
+// Positiva = antihorario (contorno externo), Negativa = horario (hueco)
+function polygonSignedAreaPx(pts) {
+  let a = 0;
+  for (let i=0;i<pts.length;i++) {
+    const p1 = pts[i], p2 = pts[(i+1)%pts.length];
+    a += p1.x*p2.y - p2.x*p1.y;
+  }
+  return a/2; // SIN Math.abs - preserva el signo
 }
 
 // Red de seguridad: el trazador Moore-neighbor puede, en casos raros que la
@@ -5308,24 +5601,92 @@ function principalDirection(pts) {
 function initMeta() {
   state.meta = new Map();
   if (!state.masks.length) return;
-  let baseId = state.masks[0].id, bestArea = -1;
-  state.masks.forEach(m => { if (m.area > bestArea) { bestArea = m.area; baseId = m.id; } });
+  
+  // Encontrar todas las máscaras que podrían ser bases (las más grandes, no conectadas entre sí)
+  // Ordenar por área
+  const sortedByArea = state.masks.slice().sort((a, b) => b.area - a.area);
+  
+  // Las dos máscaras más grandes son probablemente las bases (caja + tapa)
+  const baseIds = [];
+  const MIN_BASE_AREA = sortedByArea[0].area * 0.3; // Una base debe tener al menos 30% del área de la más grande
+  
+  for (const mask of sortedByArea) {
+    if (mask.area >= MIN_BASE_AREA && baseIds.length < 2) {
+      // Verificar que no esté demasiado cerca de otra base ya seleccionada
+      let tooClose = false;
+      for (const baseId of baseIds) {
+        const baseMask = state.masks.find(m => m.id === baseId);
+        const dist = Math.hypot(
+          mask.centroid.x - baseMask.centroid.x,
+          mask.centroid.y - baseMask.centroid.y
+        );
+        // Si está muy cerca (menos de 50px), probablemente es parte de la misma plantilla
+        if (dist < 50) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) {
+        baseIds.push(mask.id);
+      }
+    }
+  }
+  
+  console.log(`[initMeta] Detectadas ${baseIds.length} bases por área y distancia:`, baseIds);
+  
+  // Si no encontramos 2 bases, usar solo la más grande
+  if (baseIds.length === 0) {
+    baseIds.push(sortedByArea[0].id);
+  }
+  
   state.masks.forEach((m, i) => {
     state.meta.set(m.id, {
       name: 'Máscara ' + (i+1),
-      // rol provisional; recomputeSuggestedTree() lo afina abajo (pared vs
-      // solapa) una vez que sabe qué máscaras terminan siendo hojas del árbol
-      role: m.id === baseId ? 'base' : 'pared',
+      role: baseIds.includes(m.id) ? 'base' : 'pared',
       parent: null,
-      angle: m.id === baseId ? 0 : 90,
+      angle: baseIds.includes(m.id) ? 0 : 90,
       color: COLORS[i % COLORS.length],
-      roleConfirmed: false, // true en cuanto el usuario toca el rol a mano
-      angleConfirmed: false, // true en cuanto el usuario toca el ángulo a mano
-      curved: false, // true si el usuario marcó esta máscara como "pliegue curvo" (ver toggleCurved)
-      extras: [], // campos personalizados agregados a mano: {eid, type:'texto'|'png'|'nombre'|'edad', value}
+      roleConfirmed: false,
+      angleConfirmed: false,
+      curved: false,
+      extras: [],
     });
   });
-  recomputeSuggestedTree(baseId);
+  
+  // ASIGNAR MÁSCARAS A LA BASE MÁS CERCANA ANTES DE CONSTRUIR ÁRBOLES
+  // Esto garantiza que cada máscara tenga un parent inicial que apunte a su base
+  if (baseIds.length > 0) {
+    state.masks.forEach(m => {
+      if (baseIds.includes(m.id)) return; // Skip bases
+      
+      // Encontrar la base más cercana por distancia de centroide
+      let closestBase = baseIds[0];
+      let minDist = Infinity;
+      
+      for (const baseId of baseIds) {
+        const baseMask = state.masks.find(mask => mask.id === baseId);
+        const dist = Math.hypot(
+          m.centroid.x - baseMask.centroid.x,
+          m.centroid.y - baseMask.centroid.y
+        );
+        if (dist < minDist) {
+          minDist = dist;
+          closestBase = baseId;
+        }
+      }
+      
+      // Asignar esta máscara a la base más cercana
+      const meta = state.meta.get(m.id);
+      if (meta) {
+        meta.parent = closestBase;
+      }
+    });
+  }
+  
+  // Ahora construir el árbol para cada base - las máscaras ya tienen parents que apuntan a su base
+  baseIds.forEach(baseId => {
+    recomputeSuggestedTree(baseId);
+  });
 }
 
 /* Sugiere un ángulo de plegado por default según el TIPO de bisagra:
@@ -5381,22 +5742,60 @@ function recomputeSuggestedTree(rootId) {
   // en vez de heredar del primer vecino que apareció al escanear la imagen
   // (que es lo que hacía el BFS anterior y producía jerarquías sin sentido
   // físico, como abanicos enteros colgando directo de la Base).
+  
+  // IMPORTANTE: NO reasignar máscaras entre plantillas.
+  // Solo reconstruir el árbol interno de esta base con las máscaras
+  // que YA están asignadas a ella (aquellas cuyo meta.parent termina en esta base)
+  
+  // Encontrar todas las máscaras que PERTENECEN a esta base
+  // (son descendientes de esta base en el árbol actual)
+  const componentMasks = new Set([rootId]);
+  
+  function isDescendantOf(maskId, baseId) {
+    if (maskId === baseId) return true;
+    const meta = state.meta.get(maskId);
+    if (!meta || meta.role === 'ignorar') return false;
+    if (meta.parent === null || meta.parent === undefined) return false;
+    if (meta.parent === baseId) return true;
+    return isDescendantOf(meta.parent, baseId);
+  }
+  
+  // Incluir solo máscaras que ya son descendientes de esta base
+  // CRÍTICO: NO incluir otras bases (aunque sean descendientes por error)
+  for (const mask of state.masks) {
+    if (mask.id === rootId) continue;
+    const meta = state.meta.get(mask.id);
+    if (!meta || meta.role === 'ignorar') continue;
+    if (meta.role === 'base') continue; // ❌ NUNCA incluir otras bases
+    
+    // Si esta máscara ya tiene esta base como ancestro, incluirla
+    if (isDescendantOf(mask.id, rootId)) {
+      componentMasks.add(mask.id);
+    }
+  }
+  
+  console.log(`[recomputeSuggestedTree] Base ${rootId} tiene ${componentMasks.size} máscaras en su componente:`, Array.from(componentMasks));
+  
   const inTree = new Set([rootId]);
-  const remaining = new Set(state.masks.map(m => m.id));
+  const remaining = new Set(componentMasks);
   remaining.delete(rootId);
 
   while (remaining.size) {
     let bestChild = null, bestParent = null, bestWeight = -1;
     for (const id of remaining) {
       for (const nb of neighborsOf(id)) {
+        // CRÍTICO: Solo considerar vecinos que pertenecen al mismo componente
+        // Esto evita que máscaras de diferentes plantillas se mezclen
         if (!inTree.has(nb)) continue;
+        if (!componentMasks.has(nb)) continue; // <-- NUEVA VALIDACIÓN
+        
         const w = edgeWeight(id, nb);
         if (w > bestWeight) { bestWeight = w; bestChild = id; bestParent = nb; }
       }
     }
     if (bestChild === null) break; // el resto son inalcanzables (huérfanas, se avisa en la UI)
     const meta = state.meta.get(bestChild);
-    if (meta && meta.role !== 'base') meta.parent = bestParent;
+    if (meta && meta.role !== 'base') meta.parent = bestParent; // ❌ NUNCA cambiar parent de una base
     inTree.add(bestChild);
     remaining.delete(bestChild);
   }
@@ -5457,16 +5856,106 @@ showIgnored.addEventListener('change', renderMaskList);
 /* ============================================================
    PANEL "CONFIGURACIONES": el botón "Listo" vuelve a la vista "Diseño"
 ============================================================ */
+/* ============================================================
+   Botón "Incorporar" del panel de configuración de plantilla:
+   Guarda la plantilla procesada con máscaras y bisagras en localStorage
+============================================================ */
 (function(){
   const doneBtn = document.getElementById('uploadSettingsDoneBtn');
+  const nombreInput = document.getElementById('sidePanel2NombreInput');
+  const categorySelect = document.getElementById('sidePanel2CategorySelect');
   const settingsPanel = document.getElementById('floatingPanelSettingsSection');
   const railItems = document.querySelectorAll('.floating-panel-rail .nav-item');
   const disenoItem = document.querySelector('.floating-panel-rail .nav-item[data-rail-view="diseno"]');
-  if (!doneBtn) return;
+  if (!doneBtn || !nombreInput || !categorySelect) return;
 
   doneBtn.addEventListener('click', function(){
-    if (settingsPanel) settingsPanel.style.display = 'none';
-    if (disenoItem) disenoItem.click();
+    const nombre = nombreInput.value.trim();
+    const categoria = categorySelect.value;
+
+    // Validar nombre
+    if (!nombre) {
+      alert('Por favor ingresá un nombre para la plantilla.');
+      nombreInput.focus();
+      return;
+    }
+
+    // Validar categoría
+    if (!categoria) {
+      alert('Por favor seleccioná una categoría para la plantilla.');
+      categorySelect.focus();
+      return;
+    }
+
+    // Validar que haya una imagen cargada
+    if (!editorCanvas || editorCanvas.width === 0) {
+      alert('No hay ninguna plantilla cargada para guardar.');
+      return;
+    }
+
+    try {
+      // Generar preview de la máscara procesada (canvas actual)
+      const preview = editorCanvas.toDataURL('image/png');
+
+      // Extraer regiones (máscaras segmentadas)
+      const regiones = state.masks.map(function(mask) {
+        const meta = state.meta.get(mask.id);
+        return {
+          id: mask.id,
+          contour: mask.contour || [],
+          area: mask.area,
+          bbox: mask.bbox,
+          centroid: mask.centroid,
+          role: meta ? meta.role : 'base',
+          name: meta ? meta.name : 'Máscara',
+          parent: meta ? meta.parent : null,
+          angle: meta ? meta.angle : 0
+        };
+      });
+
+      // Extraer bisagras (líneas de doblez para el 3D)
+      const bisagras = editorCanvas._bisagras || [];
+
+      // Preparar datos para guardar
+      const datosPlantilla = {
+        nombre: nombre,
+        categoria: categoria,
+        preview: preview,
+        regiones: regiones,
+        bisagras: bisagras,
+        dimensiones: {
+          width: editorCanvas.width,
+          height: editorCanvas.height
+        }
+      };
+
+      // Guardar en localStorage usando GestorPlantillas
+      const plantillaGuardada = GestorPlantillas.guardar(datosPlantilla);
+
+      console.log('[Plantilla] Guardada exitosamente:', plantillaGuardada);
+
+      // Mostrar notificación de éxito
+      alert('✓ Plantilla "' + nombre + '" guardada exitosamente.');
+
+      // Cerrar panel y volver a diseño
+      if (settingsPanel) settingsPanel.style.display = 'none';
+      if (disenoItem) disenoItem.click();
+
+      // Limpiar formulario
+      nombreInput.value = '';
+      categorySelect.value = '';
+
+    } catch (error) {
+      console.error('[Plantilla] Error al guardar:', error);
+      
+      if (error.message === 'QUOTA_EXCEEDED') {
+        alert('❌ Error: No hay suficiente espacio en localStorage. Eliminá algunas plantillas antiguas.');
+      } else if (error.message === 'NOMBRE_VACIO') {
+        alert('❌ Error: El nombre no puede estar vacío.');
+      } else {
+        alert('❌ Error al guardar la plantilla: ' + error.message);
+      }
+    }
   });
 })();
 
@@ -5836,18 +6325,26 @@ hierarchyEl.addEventListener('drop', (e) => {
 function renderHierarchy() {
   const el = hierarchyEl;
   el.innerHTML = '';
-  if (!state.masks.length) { return; }
+  
+  // Si no hay máscaras, limpiar la jerarquía y salir
+  if (!state.masks.length) { 
+    return; 
+  }
+  
+  // Renderizar el contenido de la jerarquía sin modificar la visibilidad del panel
+  // (el usuario puede abrirlo/cerrarlo manualmente desde el riel flotante)
+  
   const selectedInfoEl = document.getElementById('hierarchySelectedInfo');
   if (selectedInfoEl) {
     const selMeta = state.selectedId !== null ? state.meta.get(state.selectedId) : null;
     selectedInfoEl.textContent = selMeta ? `Seleccionada: ${selMeta.name}` : 'Ninguna máscara seleccionada';
   }
   const byParent = new Map();
-  let rootId = null;
+  const rootIds = []; // SOPORTE PARA MÚLTIPLES BASES
   state.masks.forEach(m => {
     const meta = state.meta.get(m.id);
     if (meta.role === 'ignorar') return;
-    if (meta.role === 'base') rootId = m.id;
+    if (meta.role === 'base') rootIds.push(m.id); // Agregar todas las bases
     const key = meta.parent === null || meta.parent === undefined ? 'null' : meta.parent;
     if (!byParent.has(key)) byParent.set(key, []);
     byParent.get(key).push(m.id);
@@ -5979,16 +6476,44 @@ function renderHierarchy() {
     return { row };
   }
 
+  // Conjunto para rastrear qué máscaras ya fueron renderizadas
+  const rendered = new Set();
+
   function walk(id, depth) {
+    if (rendered.has(id)) return; // evitar duplicados
+    rendered.add(id);
     const { row } = makeNode(id, depth);
     el.appendChild(row);
     (byParent.get(id) || []).forEach(childId => walk(childId, depth + 1));
   }
 
-  if (rootId !== null) {
-    walk(rootId, 0);
-    // huérfanos (sin padre, no son la base)
-    (byParent.get('null') || []).forEach(id => { if (id !== rootId) walk(id, 0); });
+  // RENDERIZAR MÚLTIPLES ÁRBOLES SI HAY MÚLTIPLES BASES
+  if (rootIds.length > 0) {
+    // Renderizar cada árbol de jerarquía independiente
+    rootIds.forEach((rootId, index) => {
+      if (index > 0) {
+        // Agregar separador visual entre plantillas
+        const separator = document.createElement('div');
+        separator.style.cssText = 'height:1px; background:var(--ink-faint); margin:12px 0;';
+        el.appendChild(separator);
+        
+        // Etiqueta de plantilla
+        const label = document.createElement('div');
+        label.className = 'lvl';
+        label.style.cssText = 'color:var(--ink-faint); font-size:11px; font-weight:bold; padding:4px 0;';
+        label.textContent = `Plantilla ${index + 1}`;
+        el.appendChild(label);
+      }
+      
+      walk(rootId, 0);
+    });
+    
+    // Huérfanos que no fueron renderizados en ningún árbol (sin padre y no son bases)
+    (byParent.get('null') || []).forEach(id => { 
+      if (!rootIds.includes(id) && !rendered.has(id)) {
+        walk(id, 0); 
+      }
+    });
   } else {
     const warn = document.createElement('div');
     warn.className = 'lvl'; warn.style.color = 'var(--warn)';
@@ -6038,13 +6563,28 @@ function applyTemplateEraseStrokes(ctx, w, h) {
   ctx.restore();
 }
 function drawEditorOverlay() {
-  if (!state.iw || !state.ih || !sourceImage) return;
+  if (!state.iw || !state.ih) return;
+  
   const w = state.iw, h = state.ih;
-  ectx.clearRect(0,0,w,h);
-  ectx.drawImage(sourceImage, 0, 0, w, h);
-  applyTemplateEraseStrokes(ectx, w, h);
+  
+  // Determinar si debemos mostrar la máscara gris como elemento visual
+  const mostrarMascaraGris = !!(editorCanvas._mascaraProcesada && editorCanvas._mascaraFinal && editorCanvas._usarMascaraGrisVisual);
+  
+  if (mostrarMascaraGris) {
+    // MODO MÁSCARA GRIS: Solo la máscara sin imagen original detrás
+    ectx.clearRect(0, 0, w, h);
+    ectx.drawImage(editorCanvas._mascaraFinal, 0, 0, w, h);
+  } else if (sourceImage) {
+    // MODO NORMAL: Dibujar imagen original con strokes de borrado
+    ectx.clearRect(0, 0, w, h);
+    ectx.drawImage(sourceImage, 0, 0, w, h);
+    applyTemplateEraseStrokes(ectx, w, h);
+  } else {
+    return;
+  }
 
-  if (state.labels) {
+  if (state.labels && !mostrarMascaraGris) {
+    // Solo aplicar overlay de colores si NO estamos mostrando la máscara gris
     // overlay de color por máscara + fondo exterior transparente (no se ve la "hoja" blanca)
     const overlay = ectx.getImageData(0,0,w,h);
     for (let i=0;i<w*h;i++) {
@@ -6073,9 +6613,11 @@ function drawEditorOverlay() {
       }
     }
     ectx.putImageData(overlay, 0, 0);
+  }
 
-    // etiqueta de nombre en el centroide
-    if (state.masks.length) state.masks.forEach(m => {
+  // etiquetas de nombre: solo mostrar si NO estamos en modo máscara gris
+  if (state.masks.length && !mostrarMascaraGris) {
+    state.masks.forEach(m => {
       const meta = state.meta.get(m.id);
       if (!meta || (meta.role==='ignorar' && !showIgnored.checked)) return;
       ectx.font = 'bold 12px Segoe UI, sans-serif';
@@ -6149,6 +6691,22 @@ let disenoViewActive = true; // coincide con el estado inicial del riel (Diseño
 function fillEditorCanvasWithSp2Color() {
   const sp2ColorPickerInput = document.getElementById('sp2ColorPickerInput');
   if (!sp2ColorPickerInput || !editorCanvas.width || !editorCanvas.height) return;
+
+  // Si tenemos una máscara procesada con visualización gris activada, mostrar la máscara gris
+  if (editorCanvas._mascaraProcesada && editorCanvas._usarMascaraGrisVisual) {
+    console.log('[Visor3D] fillEditorCanvasWithSp2Color - usando máscara gris en vista Diseño');
+    ectx.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
+    ectx.drawImage(editorCanvas._mascaraFinal, 0, 0, editorCanvas.width, editorCanvas.height);
+    editorCanvas.classList.add('has-image');
+    if (dropHint) dropHint.style.display = 'none';
+    return;
+  }
+
+  // Si tenemos una máscara procesada pero sin visualización gris, NO sobrescribir
+  if (editorCanvas._mascaraProcesada) {
+    console.log('[Visor3D] fillEditorCanvasWithSp2Color omitido (máscara procesada activa)');
+    return;
+  }
 
   if (!sourceImage) {
     // No hay ninguna imagen/plantilla cargada: el canvas debe permanecer oculto.
@@ -6514,17 +7072,12 @@ function setMaskRole(id, newRole) {
   const meta = state.meta.get(id);
   if (!meta) return;
   if (newRole === 'base') {
-    state.masks.forEach(mm => {
-      const mmeta = state.meta.get(mm.id);
-      if (mmeta.role === 'base') {
-        // la Base saliente pasa a Pared: su ángulo estaba forzado en 0° mientras
-        // era Base (el input queda deshabilitado), así que sin este reset se
-        // quedaría "plana" para siempre aunque ya no sea la raíz del árbol
-        mmeta.role = 'pared';
-        mmeta.angle = 90;
-      }
-    });
-    meta.role = 'base'; meta.parent = null; meta.angle = 0;
+    // PERMITIR MÚLTIPLES BASES: Si la imagen tiene plantillas separadas,
+    // cada una puede tener su propia base. Ya no forzamos que solo haya una.
+    // Solo limpiamos el parent y ángulo de la nueva base.
+    meta.role = 'base'; 
+    meta.parent = null; 
+    meta.angle = 0;
     recomputeSuggestedTree(id);
   } else {
     meta.role = newRole;
@@ -6628,6 +7181,31 @@ function reRunFromInk() {
   state.inkClass = inkClass;
   state.masks = masks.filter(m => m.id !== exteriorId);
 
+  // DETECCIÓN DE MÚLTIPLES PLANTILLAS INDEPENDIENTES
+  // Analiza la conectividad entre máscaras para detectar grupos separados
+  const templateGroups = detectSeparateTemplates(state.masks, adjacency);
+  
+  if (templateGroups.length > 1) {
+    console.log(`[runSegmentation] Se detectaron ${templateGroups.length} plantillas separadas en la imagen`);
+    
+    // Informar al usuario
+    const proceed = confirm(
+      `Se detectaron ${templateGroups.length} plantillas separadas en esta imagen.\n\n` +
+      `Grupo 1: ${templateGroups[0].length} máscaras\n` +
+      `Grupo 2: ${templateGroups[1].length} máscaras` +
+      (templateGroups.length > 2 ? `\n... y ${templateGroups.length - 2} grupos más` : '') +
+      `\n\n¿Querés procesarlas como plantillas independientes?\n\n` +
+      `(Si elegís "Cancelar", se procesarán todas juntas como una sola plantilla)`
+    );
+    
+    if (proceed) {
+      // Por ahora, procesar solo el primer grupo y notificar al usuario
+      // En una implementación futura, esto podría crear múltiples vistas o permitir elegir
+      state.masks = templateGroups[0];
+      alert(`Procesando la plantilla 1 de ${templateGroups.length}.\n\nLas demás plantillas se ignorarán por ahora.\n\nProximamente se agregará soporte completo para múltiples plantillas.`);
+    }
+  }
+
   // intenta preservar metadatos por cercanía de centroide (para no perder el trabajo del usuario)
   const newMeta = new Map();
   state.masks.forEach((m, i) => {
@@ -6667,6 +7245,13 @@ function reRunFromInk() {
   renderHierarchy();
   drawEditorOverlay();
   recalcDimsFromMasks();
+  
+  // No mostrar automáticamente el panel de jerarquías - el usuario puede abrirlo manualmente desde el riel flotante
+  
+  // Disparar evento para el renderizador dieline
+  document.dispatchEvent(new CustomEvent('sp:segmentationComplete', {
+    detail: { masks: state.masks }
+  }));
 }
 
 /* ============================================================
@@ -6753,8 +7338,20 @@ function log(msg, cls) {
 function buildModel(opts) {
   const silent = !!(opts && opts.silent);
   state.buildLogLines = [];
-  // limpia escena anterior
+  // limpia escena anterior - INCLUYE objetos agregados directo a scene (como la tapa)
   while (root.children.length) root.remove(root.children[0]);
+  
+  // CRÍTICO: Limpiar TODOS los objetos de la escena que no sean luces/cámara
+  // La tapa se agrega directo a scene, no a root
+  const objectsToRemove = [];
+  scene.children.forEach(child => {
+    // Mantener solo luces, cámara y root. Remover grupos de tapas anteriores
+    if (child !== root && child.type !== 'DirectionalLight' && child.type !== 'AmbientLight' && !child.isCamera) {
+      objectsToRemove.push(child);
+    }
+  });
+  objectsToRemove.forEach(obj => scene.remove(obj));
+  
   nodesById = new Map();
   foldablePivots = [];
 
@@ -6771,20 +7368,28 @@ function buildModel(opts) {
     area: m.area,
   })));
 
+  // Detectar todas las bases
+  const allBases = state.masks.filter(m => state.meta.get(m.id).role === 'base');
+  
   let baseMask = null;
-  state.masks.forEach(m => { if (state.meta.get(m.id).role === 'base') baseMask = m; });
-  if (!baseMask) {
+  if (allBases.length === 0) {
+    // No hay ninguna base marcada, usar la de mayor área
     let bestArea = -1;
     state.masks.forEach(m => { if (m.area > bestArea) { bestArea = m.area; baseMask = m; } });
     state.meta.get(baseMask.id).role = 'base';
     log('No había ninguna máscara marcada como Base — se usó automáticamente la de mayor área.', 'warnln');
+    allBases.push(baseMask);
+  } else {
+    // Ordenar bases por área (más grande primero) para construcción 3D
+    allBases.sort((a, b) => b.area - a.area);
+    baseMask = allBases[0]; // La más grande es la caja principal para el 3D
   }
 
   // valida ciclos y padres faltantes; corrige asignando huérfanos directo a la base
-  const activeMasks = state.masks.filter(m => state.meta.get(m.id).role !== 'ignorar');
-  activeMasks.forEach(m => {
+  state.masks.forEach(m => {
     if (m.id === baseMask.id) return;
     const meta = state.meta.get(m.id);
+    if (meta.role === 'ignorar') return;
     if (meta.parent === null || meta.parent === undefined) {
       log(`"${meta.name}" no tiene padre asignado — se conecta directo a la Base.`, 'warnln');
       meta.parent = baseMask.id;
@@ -6813,8 +7418,13 @@ function buildModel(opts) {
     modelTexture.colorSpace = THREE.SRGBColorSpace;
   }
 
-  function childrenOf(id) {
-    return activeMasks.filter(m => m.id !== baseMask.id && state.meta.get(m.id).parent === id);
+  function childrenOf(id, allowedMaskIds) {
+    return state.masks.filter(m => {
+      const meta = state.meta.get(m.id);
+      // Si se proporcionó un filtro de máscaras permitidas, solo incluir esas
+      if (allowedMaskIds && !allowedMaskIds.has(m.id)) return false;
+      return m.id !== baseMask.id && meta.role !== 'ignorar' && meta.parent === id;
+    });
   }
 
   // busca si el par (mask, parentMask) participa de un abanico detectado
@@ -6916,9 +7526,11 @@ function buildModel(opts) {
   // máscara que actúa de PADRE, conocer también las bisagras de TODOS sus
   // hijos, y eso no depende del orden en que se recorra el árbol.
   const hingeByMaskId = new Map();
-  activeMasks.forEach(m => {
+  state.masks.forEach(m => {
     if (m.id === baseMask.id) return;
-    const parentMask = activeMasks.find(mm => mm.id === state.meta.get(m.id).parent) || baseMask;
+    const meta = state.meta.get(m.id);
+    if (meta.role === 'ignorar') return;
+    const parentMask = state.masks.find(mm => mm.id === meta.parent) || baseMask;
     hingeByMaskId.set(m.id, hingeFor(m, parentMask));
   });
 
@@ -7099,14 +7711,17 @@ function buildModel(opts) {
     };
   }
 
-  function buildNode(mask, parentObj3D, cumWorld, depth) {
+  function buildNode(mask, parentObj3D, cumWorld, depth, allowedMaskIds) {
     let pivot;
     let localOrigin;
     if (mask.id === baseMask.id) {
       pivot = root;
       localOrigin = { x:0, z:0 };
     } else {
-      const parentMask = activeMasks.find(m => m.id === state.meta.get(mask.id).parent) || baseMask;
+      const parentMask = state.masks.find(m => {
+        const meta = state.meta.get(mask.id);
+        return m.id === meta.parent;
+      }) || baseMask;
       const hinge = hingeByMaskId.get(mask.id);
 
       // ¿el padre es una pared curva y este borde corre A LO LARGO de su
@@ -7126,7 +7741,7 @@ function buildModel(opts) {
           const lateral = buildLateralChild(mask, parentMask, hinge, parentChain, state.meta.get(mask.id).name);
           if (lateral) {
             nodesById.set(mask.id, { pivot: lateral.reprPivot });
-            childrenOf(mask.id).forEach(child => buildNode(child, lateral.tipParent3D, lateral.tipCumOrigin, depth+1));
+            childrenOf(mask.id, allowedMaskIds).forEach(child => buildNode(child, lateral.tipParent3D, lateral.tipCumOrigin, depth+1, allowedMaskIds));
             return;
           }
         }
@@ -7244,19 +7859,127 @@ function buildModel(opts) {
     }
 
     nodesById.set(mask.id, { pivot });
-    childrenOf(mask.id).forEach(child => buildNode(child, childParent3D, childCumOrigin, depth+1));
+    childrenOf(mask.id, allowedMaskIds).forEach(child => buildNode(child, childParent3D, childCumOrigin, depth+1, allowedMaskIds));
   }
 
-  buildNode(baseMask, root, {x:0,z:0}, 0);
+  // Calcular qué máscaras pertenecen a cada base (usando el árbol de jerarquía ya establecido)
+  function getMasksForBase(baseId) {
+    const baseMask = state.masks.find(m => m.id === baseId);
+    if (!baseMask) return new Set();
+    
+    const result = new Set([baseId]);
+    
+    if (allBases.length === 1) {
+      // Solo una base: todas las máscaras le pertenecen
+      state.masks.forEach(m => result.add(m.id));
+      console.log(`[getMasksForBase] Una sola base ${baseId}, retornando todas las ${result.size} máscaras`);
+      return result;
+    }
+    
+    // Función helper para verificar si una máscara es descendiente de esta base
+    function isDescendantOf(maskId, targetBaseId) {
+      if (maskId === targetBaseId) return true;
+      const meta = state.meta.get(maskId);
+      if (!meta || meta.role === 'ignorar') return false;
+      if (meta.parent === null || meta.parent === undefined) return false;
+      if (meta.parent === targetBaseId) return true;
+      return isDescendantOf(meta.parent, targetBaseId);
+    }
+    
+    // Múltiples bases: usar el árbol de jerarquía establecido
+    for (const mask of state.masks) {
+      if (mask.id === baseId) continue;
+      
+      // Saltar máscaras marcadas como "ignorar"
+      const maskMeta = state.meta.get(mask.id);
+      if (maskMeta && maskMeta.role === 'ignorar') continue;
+      
+      // Verificar si es descendiente de esta base
+      if (isDescendantOf(mask.id, baseId)) {
+        result.add(mask.id);
+      }
+    }
+    
+    console.log(`[getMasksForBase] Base ${baseId} tiene ${result.size} máscaras por jerarquía:`, Array.from(result));
+    return result;
+  }
+  
+  const mainMaskIds = getMasksForBase(baseMask.id);
+  console.log(`[buildModel] Base principal ${baseMask.id} tiene ${mainMaskIds.size} máscaras:`, Array.from(mainMaskIds));
+
+  buildNode(baseMask, root, {x:0,z:0}, 0, mainMaskIds);
+
+  // Si hay múltiples bases, la segunda más grande es probablemente la tapa
+  if (allBases.length > 1) {
+    const lidMask = allBases[1]; // La segunda más grande
+    const lidMeta = state.meta.get(lidMask.id);
+    const lidMaskIds = getMasksForBase(lidMask.id);
+    
+    console.log(`[buildModel] Tapa ${lidMask.id} tiene ${lidMaskIds.size} máscaras:`, Array.from(lidMaskIds));
+    log(`Detectada tapa: "${lidMeta.name}". Posicionándola encima de la caja.`, 'ok');
+    
+    // Crear un grupo para la tapa que se posicionará encima de la caja
+    const lidGroup = new THREE.Group();
+    lidGroup.name = 'Tapa';
+    
+    // Construir la tapa en su propio grupo
+    const lidRoot = new THREE.Group();
+    lidRoot.name = 'Tapa (root)';
+    lidGroup.add(lidRoot);
+    
+    // Guardar referencias al contexto de la caja principal
+    const mainRoot = root;
+    const mainNodesById = nodesById;
+    const mainFoldablePivots = foldablePivots;
+    
+    // Crear contexto temporal para la tapa
+    root = lidRoot;
+    nodesById = new Map();
+    const lidFoldablePivots = [];
+    foldablePivots = lidFoldablePivots;
+    
+    // Construir el árbol de la tapa CON FILTRO de máscaras permitidas
+    buildNode(lidMask, lidRoot, {x:0,z:0}, 0, lidMaskIds);
+    
+    // Restaurar el contexto de la caja principal
+    root = mainRoot;
+    nodesById = mainNodesById;
+    foldablePivots = mainFoldablePivots;
+    
+    // Agregar los pivots de la tapa a la lista principal para que se plieguen también
+    lidFoldablePivots.forEach(function(p) {
+      foldablePivots.push(p);
+    });
+    
+    // Calcular la altura de la caja principal (bounding box en Y)
+    const mainBox = new THREE.Box3().setFromObject(mainRoot);
+    const mainHeight = mainBox.max.y - mainBox.min.y;
+    
+    // Posicionar la tapa encima de la caja
+    // La tapa se coloca a la altura máxima de la caja principal
+    lidGroup.position.y = mainHeight;
+    
+    // Agregar la tapa a la escena principal (no a root, para que tenga su propia posición)
+    scene.add(lidGroup);
+    
+    log(`Tapa posicionada a ${mainHeight.toFixed(2)} unidades de altura.`, 'ok');
+  }
 
   document.getElementById('empty3d').style.display = 'none';
-  document.getElementById('canvasHost').style.display = 'block';
-  resize3D();
+  // Solo mostrar canvasHost normalmente si el toggle de maqueta NO está activo
+  const maquetaToggle = document.getElementById('railMaquetaToggle');
+  if (!maquetaToggle || !maquetaToggle.checked) {
+    document.getElementById('canvasHost').style.display = 'block';
+    resize3D();
+  }
+  // Si el toggle está activo, ya está en pantalla completa y el toggle maneja el resize
   const wasBuilt = state.built;
   state.built = true;
   fitZoomRangeToModel(!wasBuilt);
   applyFold(currentFoldPercent/100);
-  log(`Modelo actualizado: ${activeMasks.length} paneles.`, 'ok');
+  const activeCount = state.masks.filter(m => state.meta.get(m.id).role !== 'ignorar').length;
+  log(`Modelo actualizado: ${activeCount} paneles.`, 'ok');
+  console.log('[buildModel] Modelo construido. root.children:', root.children.length, 'scene.children:', scene.children.length);
   updateMasksConsole();
   // El visor 3D vive siempre en #side-card (tarjeta flotante), así que ya no
   // hace falta cambiar de pestaña — el modelo aparece ahí apenas está listo.
@@ -7950,11 +8673,17 @@ window.addEventListener('pointerup', () => {
 ============================================================ */
 function resize3D() {
   const w = host.clientWidth, h = host.clientHeight;
-  if (!w || !h) return;
+  console.log('[resize3D] Redimensionando:', w, 'x', h);
+  if (!w || !h) {
+    console.warn('[resize3D] Dimensiones inválidas, abortando');
+    return;
+  }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
+  console.log('[resize3D] Renderer redimensionado. Scene children:', scene.children.length);
 }
+window.resize3D = resize3D; // Exponer globalmente para que ui-controles-app.js pueda llamarla
 window.addEventListener('resize', resize3D);
 resize3D();
 
@@ -7965,60 +8694,4 @@ function tick() {
   requestAnimationFrame(tick);
 }
 tick();
-
-/* ---------- Solapita arrastrable: agranda/achica la tarjeta del visor (#side-card) ---------- */
-(function(){
-  const handle = document.getElementById('empty3dResizeHandle');
-  const card = document.getElementById('side-card');
-  const container = document.querySelector('.window');
-  if (!handle || !card || !container) return;
-
-  const MARGIN = 24;   // mismo margen que top/right de la tarjeta, para no salirse de la ventana
-  const MIN_SIZE = 200;
-
-  let resizing = null;
-
-  handle.addEventListener('pointerdown', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    resizing = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startWidth: card.offsetWidth,
-      startHeight: card.offsetHeight
-    };
-    handle.setPointerCapture(e.pointerId);
-  });
-
-  handle.addEventListener('pointermove', function(e){
-    if (!resizing) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const maxWidth = containerRect.width - MARGIN - MARGIN;
-    const maxHeight = containerRect.height - MARGIN - MARGIN;
-
-    // Arrastrar hacia la izquierda/abajo agranda la tarjeta (la solapa está en la esquina inferior izquierda)
-    const dx = resizing.startX - e.clientX;
-    const dy = e.clientY - resizing.startY;
-
-    let newWidth = resizing.startWidth + dx;
-    let newHeight = resizing.startHeight + dy;
-
-    newWidth = Math.min(Math.max(newWidth, MIN_SIZE), maxWidth);
-    newHeight = Math.min(Math.max(newHeight, MIN_SIZE), maxHeight);
-
-    card.style.width = newWidth + 'px';
-    card.style.height = newHeight + 'px';
-
-    if (typeof resize3D === 'function') resize3D();
-  });
-
-  function stopResizing(e){
-    if (!resizing) return;
-    try { handle.releasePointerCapture(e.pointerId); } catch(err){}
-    resizing = null;
-  }
-  handle.addEventListener('pointerup', stopResizing);
-  handle.addEventListener('pointercancel', stopResizing);
-})();
 
